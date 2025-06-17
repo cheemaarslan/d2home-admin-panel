@@ -62,7 +62,7 @@ const TabMenu = () => {
   useEffect(() => {
     console.log('menu mounting...');
     if (!pathname.includes(menu.activeMenu.url)) {
-      window.location.replace(`/${menu.activeMenu.url}`);
+      // window.location.replace(`/${menu.activeMenu.url}`);
     }
     // eslint-disable-next-line
   }, []);
