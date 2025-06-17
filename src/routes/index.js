@@ -44,6 +44,7 @@ import PaymentToPartnersRoutes from './admin/payment-to-partners';
 import SellerFinance from './admin/seller-finance';
 import ShopDetails from './admin/ShopDetails';
 import DeliveryManFinance from './admin/deliveryman-finance';
+import DeliveryManDetails from './admin/deliveryman-detail';
 
 
 
@@ -127,6 +128,7 @@ const AllRoutes = [
   ...PaymentToPartnersRoutes,
   ...SellerFinance,
   ...DeliveryManFinance,
+  ...DeliveryManDetails,
   ...ShopDetails,
 
   // seller routes

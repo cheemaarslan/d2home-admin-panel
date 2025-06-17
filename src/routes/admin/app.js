@@ -22,6 +22,10 @@ const AppRoutes = [
     path: 'deliveryman-finance',
     component: lazy(() => import('views/deliveryman-finance')),
   },
+  {
+    path: 'deliveryman-details',
+    component: lazy(() => import('views/deliveryman-finance/deliveryman-detail')),
+  },
   // {
   //   path: 'deliveryman-finance/:shopUuid', // Note this now has :shopUuid parameter
   //   component: lazy(() => import('views/deliveryman-finance/OrderDetails')),
