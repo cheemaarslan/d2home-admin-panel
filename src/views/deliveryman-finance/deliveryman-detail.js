@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Typography, Spin, Alert, Table, Divider, Card, Row, Col, Button, message } from 'antd'; // Added message to imports
 import { DownloadOutlined } from '@ant-design/icons';
 import download from 'downloadjs';
-import SellerFinanceService from '../../services/seller-finance';
+import DeliverymanFinanceService from '../../services/deliveryman-finance';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -18,44 +18,44 @@ const companyDetails = {
   abn: '',
 };
 
-const ShopDetails = () => {
-  const { shopUuid } = useParams();
-  const [shopData, setShopData] = useState(null);
+const DeliveryManDetails = () => {
+  const { id } = useParams();
+  const [deliveryManData, setDeliveryManData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    const fetchShopDetails = async () => {
+    const fetchDeliveryManDetails = async () => {
       try {
         setLoading(true);
-        const response = await SellerFinanceService.getShopDetails(shopUuid);
+        const response = await DeliverymanFinanceService.getDeliveryManDetails(id);
         console.log('API Response Data:', response);
-        if (response && response.shop && response.orders && response.total_commission !== undefined) {
-          setShopData(response);
+        if (response && response.deliveryMan && response.orders && response.total_commission !== undefined) {
+          setDeliveryManData(response);
         } else {
           console.error('API response is missing expected fields:', {
-            hasShop: !!response.shop,
+            hasDeliveryMan: !!response.deliveryMan,
             hasOrders: !!response.orders,
             hasTotalCommission: response.total_commission !== undefined,
           });
-          throw new Error('API response is missing expected data fields (shop, orders, total_commission)');
+          throw new Error('API response is missing expected data fields (deliveryMan, orders, total_commission)');
         }
       } catch (err) {
-        setError(err.message || 'Failed to fetch shop details');
-        console.error('Error fetching shop details:', err);
+        setError(err.message || 'Failed to fetch delivery man details');
+        console.error('Error fetching delivery man details:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (shopUuid) {
-      fetchShopDetails();
+    if (id) {
+      fetchDeliveryManDetails();
     } else {
-      setError('Shop UUID is missing in URL');
+      setError('Delivery Man ID is missing in URL');
       setLoading(false);
     }
-  }, [shopUuid]);
+  }, [id]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
@@ -64,15 +64,15 @@ const ShopDetails = () => {
   };
 
 const handleDownloadInvoice = async () => {
-    if (!shopUuid) {
-      message.error('Shop UUID is missing');
+    if (!id) {
+      message.error('Delivery Man ID is missing');
       return;
     }
 
     setDownloading(true);
     try {
-      const blobData = await SellerFinanceService.downloadInvoice(shopUuid);
-      download(blobData, `shop-invoice-${shopUuid}.pdf`, 'application/pdf');
+      const blobData = await DeliverymanFinanceService.downloadInvoice(`${id}`);
+      download(blobData, `delivery-man-invoice-${id}.pdf`, 'application/pdf');
       message.success('Invoice downloaded successfully');
     } catch (err) {
       console.error('Download failed:', err);
@@ -104,16 +104,16 @@ const handleDownloadInvoice = async () => {
     netAmountPayableToSeller: 0,
   };
 
-  if (shopData) {
+  if (deliveryManData) {
     derivedSellerDetails = {
-      name: shopData.shop?.translation?.title || `${shopData.shop?.seller?.firstname || ''} ${shopData.shop?.seller?.lastname || ''}`.trim() || 'N/A',
-      mobile: shopData.shop?.phone || 'N/A',
-      email: shopData.shop?.seller?.email || shopData.shop?.email || 'N/A',
-      address: shopData.shop?.translation?.address || 'N/A',
+      name: deliveryManData.deliveryMan?.translation?.title || `${deliveryManData.deliveryMan?.firstname || ''} ${deliveryManData.deliveryMan?.lastname || ''}`.trim() || 'N/A',
+      mobile: deliveryManData.deliveryMan?.phone || 'N/A',
+      email: deliveryManData.deliveryMan?.email || 'N/A',
+      address: deliveryManData.deliveryMan?.translation?.address || 'N/A',
     };
 
-    if (shopData.orders && shopData.orders.length > 0) {
-      const orderDates = shopData.orders.map(order => new Date(order.updated_at || order.created_at));
+    if (deliveryManData.orders && deliveryManData.orders.length > 0) {
+      const orderDates = deliveryManData.orders.map(order => new Date(order.updated_at || order.created_at));
         if (orderDates.length > 0) {
          const validOrderDates = orderDates.filter(date => !isNaN(date.valueOf()));
          if (validOrderDates.length > 0) {
@@ -126,16 +126,16 @@ const handleDownloadInvoice = async () => {
     }
 
     // --- Corrected Financial Calculations based on your LATEST instruction ---
-    financialSummary.totalSales = Array.isArray(shopData.orders)
-      ? shopData.orders.reduce((sum, order) => sum + (Number(order.total_price) || 0), 0)
+    financialSummary.totalSales = Array.isArray(deliveryManData.orders)
+      ? deliveryManData.orders.reduce((sum, order) => sum + (Number(order.total_price) || 0), 0)
       : 0;
     
     // This is the "commission $16.00" part from your example
-    financialSummary.grossPlatformCommission = Number(shopData.total_commission) || 0;
+    financialSummary.grossPlatformCommission = Number(deliveryManData.total_commission) || 0;
 
     // This is the "discount $6.00" part from your example
-    financialSummary.sumOfOrderDiscounts = Array.isArray(shopData.orders)
-      ? shopData.orders.reduce((sum, order) => sum + (Number(order.total_discount) || 0), 0)
+    financialSummary.sumOfOrderDiscounts = Array.isArray(deliveryManData.orders)
+      ? deliveryManData.orders.reduce((sum, order) => sum + (Number(order.total_discount) || 0), 0)
       : 0;
 
     // User: "make sum of commission and discount" - this is the total amount deducted by the platform.
@@ -155,7 +155,7 @@ const handleDownloadInvoice = async () => {
     return <div style={{ padding: 24 }}><Alert message="Error Processing Report" description={error} type="error" showIcon /></div>;
   }
 
-  if (!shopData) {
+  if (!deliveryManData || !deliveryManData.deliveryMan || !deliveryManData.orders || deliveryManData.orders.length === 0) {
     return <div style={{ padding: 24 }}><Alert message="No Data" description="Required report data could not be loaded or is incomplete." type="warning" showIcon /></div>;
   }
   
@@ -274,7 +274,7 @@ const handleDownloadInvoice = async () => {
           <Title level={5} style={{ marginBottom: 12, color: '#333', fontWeight: 600 }}>Overview of individual orders - online payments</Title>
           <Table
             columns={orderColumns}
-            dataSource={shopData.orders || []}
+            dataSource={deliveryManData.orders || []}
             rowKey="id"
             pagination={false}
             bordered
@@ -303,4 +303,4 @@ const handleDownloadInvoice = async () => {
   );
 };
 
-export default ShopDetails;
+export default DeliveryManDetails;

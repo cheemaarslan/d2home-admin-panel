@@ -49,8 +49,8 @@ const DeliverymanFinance = () => {
       alert('Invalid deliveryman ID or week range');
       return;
     }
-    console.log('View Details clicked for deliverymanId:', deliverymanId, 'weekRange:', weekRange);
-    navigate(`/deliveryman-finance/details/${deliverymanId}/${encodeURIComponent(weekRange)}`);
+   
+    navigate(`/deliveryman-details/${deliverymanId}/${encodeURIComponent(weekRange)}`);
   };
 
   const columns = [

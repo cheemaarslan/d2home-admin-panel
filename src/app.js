@@ -103,7 +103,7 @@ const App = () => {
     />
     
     {/* Redirect '/' to dashboard explicitly */}
-    <Route path='/' element={<Navigate to='/abcd' />} />
+    <Route path='/' element={<Navigate to='/dashboard' />} />
 
     {/* Protected app layout */}
     <Route

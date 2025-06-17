@@ -31,18 +31,18 @@ const DeliverymanFinanceService = {
     }
   },
 
-getShopDetails: async (shopUuid) => {
-  if (!shopUuid) {
-    throw new Error('Shop UUID is required');
+getDeliveryManDetails: async (id) => {
+  if (!id) {
+    throw new Error('Delivery Man ID is required');
   }
   
   try {
-    const response = await request.get(`/dashboard/admin/deliveryman-finance/${shopUuid}`, {
-      params: { lang: 'en' } // Include language parameter if needed
+    const response = await request.get(`/dashboard/admin/deliveryman-finance/deliveryman-details/${id}`, {
+      
     });
     return response.data;
   } catch (error) {
-    console.error(`Error fetching details for shop ${shopUuid}:`, error);
+    console.error(`Error fetching details for delivery man ${id}:`, error);
     throw error;
   }
 },
