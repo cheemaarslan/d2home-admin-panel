@@ -2,7 +2,7 @@
 export const PROJECT_NAME = 'Foodyman marketplace';
 
 export const BASE_URL = 
-  process.env.REACT_APP_BASE_URL || 'http://127.0.0.1:8000';
+  process.env.REACT_APP_BASE_URL || ' http://127.0.0.1:8000';
 
 export const WEBSITE_URL = 'http://localhost:3000';
 
@@ -31,7 +31,7 @@ export const APP_ID = '1:91552841385:web:5b291ae433d0288bcff3b8';
 export const MEASUREMENT_ID = 'G-XKMBTB0VNN';
 
 // recaptcha key, you can get it from https://www.google.com/recaptcha/admin/create
-export const RECAPTCHASITEKEY = '';
+export const RECAPTCHASITEKEY = '6LebMmQrAAAAAGTu4GHZvcYwkqGgoWNPcPcfWE1R';
 
 // demo data, no need to change
 export const LAT = 47.4143302506288;
