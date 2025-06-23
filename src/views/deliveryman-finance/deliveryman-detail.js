@@ -4,6 +4,11 @@ import { Typography, Spin, Alert, Table, Divider, Card, Row, Col, Button, messag
 import { DownloadOutlined } from '@ant-design/icons';
 import download from 'downloadjs';
 import DeliverymanFinanceService from '../../services/deliveryman-finance';
+import {
+  PhoneOutlined,
+  MailOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -205,59 +210,230 @@ const handleDownloadInvoice = async () => {
         </div>
         {/* MODIFICATION END */}
 
-        <div style={{ backgroundColor: '#e4002b', height: '8px', marginBottom: '25px' }}></div>
-        {/* The button was previously located around here, after the red border div */}
-        
-        <Row gutter={[24, 24]} align="top" style={{ marginBottom: 25, padding: '0 25px' }}>
-          <Col xs={24} md={12}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Text style={{ fontSize: '30px', fontWeight: 700, color: '#e4002b', letterSpacing: '0.5px', textTransform:'uppercase' }}>D2</Text>
-              <Text style={{ fontSize: '30px', fontWeight: 700, color: '#262626', letterSpacing: '0.5px', marginLeft: '2px', textTransform:'uppercase' }}>H<span style={{fontWeight:400}}>o</span>m<span style={{fontWeight:400}}>e</span>s</Text>
-            </div>
-          </Col>
-          <Col xs={24} md={12} style={{ textAlign: 'right' }}>
-            <Text style={{ ...strongTextStyle, fontSize: '15px', marginBottom:4 }}>{companyDetails.name}</Text>
-            <Text style={commonTextStyle}>{companyDetails.addressLine1}</Text>
-            <Text style={commonTextStyle}>{companyDetails.addressLine2}</Text>
-            <Text style={commonTextStyle}>{companyDetails.email}</Text>
-            <Text style={commonTextStyle}>Tel.: {companyDetails.phone}</Text>
-            <Text style={commonTextStyle}>ABN: {companyDetails.abn}</Text>
-          </Col>
-        </Row>
+       <div style={{ backgroundColor: "#f59e0b" }}>
+          <Row align="middle" justify="space-between">
+            {/* Left Side */}
+            <Col xs={24} md={12} style={{ padding: "20px 25px" }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              >
+                {/* D2Home Text */}
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <span
+                    style={{
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: "40px",
+                      padding: "0 8px",
+                    }}
+                  >
+                    D2Home
+                  </span>
+                </div>
+                {/* Contact Info */}
+                <div>
+                
+                  <Text
+                    style={{
+                      color: "white",
+                      display: "block",
+                      fontSize: "14px",
+                    }}
+                  >
+                    <MailOutlined
+                      style={{ marginRight: 8, fontSize: "14px" }}
+                    />{" "}
+                    {companyDetails.email}
+                  </Text>
+                  <Text
+                    style={{
+                      color: "white",
+                      display: "block",
+                      fontSize: "14px",
+                    }}
+                  >
+                    <PhoneOutlined
+                      style={{ marginRight: 8, fontSize: "14px" }}
+                    />{" "}
+                    {companyDetails.phone}
+                  </Text>
+                </div>
+              </div>
+            </Col>
 
-        <div style={{padding: '0 25px'}}> <Divider style={{ margin: '25px 0' }} /> </div>
-        
-        <Row gutter={[24, 24]} style={{ marginBottom: 25, padding: '0 25px' }}>
-          <Col xs={24} md={24}>
-            <div style={{ marginBottom: 20 }}>
-              <Text style={strongTextStyle}>{derivedSellerDetails.name}</Text>
-              <Text style={commonTextStyle}>Mobile: {derivedSellerDetails.mobile}</Text>
-              <Text style={commonTextStyle}>Email: {derivedSellerDetails.email}</Text>
-              <Text style={commonTextStyle}>Address: {derivedSellerDetails.address}</Text>
+            {/* Right Side (Logo) */}
+            <Col xs={24} md={6} style={{ textAlign: "right", height: "100%" }}>
+              <img
+                src="/image.png" // Replace with your actual logo path
+                alt="D2Home Logo"
+                style={{
+                  height: "100%",
+                  width: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
+            </Col>
+          </Row>
+        </div>
+
+        <div style={{ padding: "0 25px" }}>
+          {" "}
+          <Divider style={{ margin: "25px 0" }} />{" "}
+        </div>
+
+        <Row gutter={[24, 24]} style={{ marginBottom: 25, padding: "0 25px" }}>
+          {/* Left Column */}
+          <Col xs={24} md={12}>
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: 14 }}>
+                Invoice No:
+              </Text>
+              <Text style={{ fontSize: 14, marginLeft: 8 }}>
+                #{derivedInvoiceMeta.invoiceNumber}
+              </Text>
+            </div>
+
+            <div style={{ marginBottom: 8 }}>
+              <Text strong style={{ fontSize: 14 }}>
+                Invoice To:
+              </Text>
+            </div>
+            <div style={{ marginBottom: 8 }}>
+              <Text
+                style={{ color: "#f59e0b", fontWeight: "bold", fontSize: 16 }}
+              >
+                {derivedSellerDetails.name}
+              </Text>
             </div>
             <div>
-              <Text style={{...commonTextStyle, fontWeight: 'bold'}}>Date of invoice: <Text style={{fontWeight: 'normal'}}>{derivedInvoiceMeta.dateOfInvoice}</Text></Text>
-              <Text style={{...commonTextStyle, fontWeight: 'bold'}}>Billing period: <Text style={{fontWeight: 'normal'}}>[{derivedInvoiceMeta.billingPeriodStart}] - [{derivedInvoiceMeta.billingPeriodEnd}]</Text></Text>
-              <Text style={{ ...strongTextStyle, fontSize: '18px', marginTop: '8px' }}>INVOICE #{derivedInvoiceMeta.invoiceNumber}</Text>
+              <Text style={{ fontSize: 14, display: "block" }}>
+                Phone: {derivedSellerDetails.mobile}
+              </Text>
+              <Text style={{ fontSize: 14, display: "block" }}>
+                Email: {derivedSellerDetails.email}
+              </Text>
+            </div>
+          </Col>
+
+          {/* Right Column */}
+          <Col xs={24} md={12} style={{ textAlign: "right" }}>
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: 14 }}>
+                Invoice Date:
+              </Text>
+              <Text style={{ fontSize: 14, marginLeft: 8 }}>
+                {derivedInvoiceMeta.dateOfInvoice}
+              </Text>
+            </div>
+
+            <div style={{ marginBottom: 8 }}>
+              <Text strong style={{ fontSize: 14 }}>
+                Pay To:
+              </Text>
+            </div>
+            <div>
+              <Text
+                style={{ color: "#f59e0b", fontWeight: "bold", fontSize: 16 }}
+              >
+                {companyDetails.name}
+              </Text>
+            </div>
+            <div>
+              <Text style={{ fontSize: 14, display: "block" }}>
+                {companyDetails.addressLine1}
+              </Text>
+              <Text style={{ fontSize: 14, display: "block" }}>
+                {companyDetails.addressLine2}
+              </Text>
             </div>
           </Col>
         </Row>
 
-        <div style={{ padding: '0 25px', marginBottom: 25 }}>
-          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '13px' }}>
+        <div style={{ padding: "0 25px", marginBottom: 25 }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "separate",
+              borderSpacing: 0,
+              fontSize: "13px",
+            }}
+          >
             <thead>
-              <tr style={{ backgroundColor: '#fafafa' }}>
-                <th style={{ padding: '10px 12px', border: '1px solid #e8e8e8', textAlign: 'left', color: '#333', fontWeight: 600 }}>Description</th>
-                <th style={{ padding: '10px 12px', border: '1px solid #e8e8e8', textAlign: 'right', color: '#333', fontWeight: 600 }}>Sub Total</th>
-                <th style={{ padding: '10px 12px', border: '1px solid #e8e8e8', textAlign: 'right', color: '#333', fontWeight: 600 }}>Total</th>
+              <tr style={{ backgroundColor: "#e49000", color: "#000000", borderBottom: "2px solid black", border: "1px solid black" }}>
+                <th
+                  style={{
+                    padding: "10px 12px",
+                    border: "1px solid #e8e8e8",
+                    textAlign: "left",
+                    color: "#333",
+                    fontWeight: 600,
+                  }}
+                >
+                  Description
+                </th>
+                <th
+                  style={{
+                    padding: "10px 12px",
+                    border: "1px solid #e8e8e8",
+                    textAlign: "right",
+                    color: "#333",
+                    fontWeight: 600,
+                  }}
+                >
+                  Sub Total
+                </th>
+                <th
+                  style={{
+                    padding: "10px 12px",
+                    border: "1px solid #e8e8e8",
+                    textAlign: "right",
+                    color: "#333",
+                    fontWeight: 600,
+                  }}
+                >
+                  Total
+                </th>
               </tr>
             </thead>
             <tbody>
               {financialTableRows.map((row, index) => (
                 <tr key={index}>
-                  <td style={{ padding: '10px 12px', border: '1px solid #e8e8e8', borderTop: index === 0 ? '1px solid #e8e8e8' : 'none', color: row.isBold ? '#333' : '#555', fontWeight: row.isBold ? 600 : 400 }}>{row.desc}</td>
-                  <td style={{ padding: '10px 12px', border: '1px solid #e8e8e8', borderTop: index === 0 ? '1px solid #e8e8e8' : 'none', textAlign: 'right', color: '#555' }}>{row.sub !== '' ? `$${Number(row.sub).toFixed(2)}` : ''}</td>
-                  <td style={{ padding: '10px 12px', border: '1px solid #e8e8e8', borderTop: index === 0 ? '1px solid #e8e8e8' : 'none', textAlign: 'right', color: row.isBold ? '#333' : '#555', fontWeight: row.isBold ? 600 : 400, fontSize: row.isFinal ? '15px' : '13px' }}>{row.total !== '' ? `$${Number(row.total).toFixed(2)}` : ''}</td>
+                  <td
+                    style={{
+                      padding: "10px 12px",
+                      border: "1px solid #e8e8e8",
+                      borderTop: index === 0 ? "1px solid #e8e8e8" : "none",
+                      color: row.isBold ? "#333" : "#555",
+                      fontWeight: row.isBold ? 600 : 400,
+                    }}
+                  >
+                    {row.desc}
+                  </td>
+                  <td
+                    style={{
+                      padding: "10px 12px",
+                      border: "1px solid #e8e8e8",
+                      borderTop: index === 0 ? "1px solid #e8e8e8" : "none",
+                      textAlign: "right",
+                      color: "#555",
+                    }}
+                  >
+                    {row.sub !== "" ? `$${Number(row.sub).toFixed(2)}` : ""}
+                  </td>
+                  <td
+                    style={{
+                      padding: "10px 12px",
+                      border: "1px solid #e8e8e8",
+                      borderTop: index === 0 ? "1px solid #e8e8e8" : "none",
+                      textAlign: "right",
+                      color: row.isBold ? "#333" : "#555",
+                      fontWeight: row.isBold ? 600 : 400,
+                      fontSize: row.isFinal ? "15px" : "13px",
+                    }}
+                  >
+                    {row.total !== "" ? `$${Number(row.total).toFixed(2)}` : ""}
+                  </td>
                 </tr>
               ))}
             </tbody>

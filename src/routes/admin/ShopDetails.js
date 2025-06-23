@@ -2,7 +2,7 @@ import { lazy } from 'react';
 
 const SellerFinance = [
     {
-        path: 'seller-finance/:shopUuid',  // Note this now has :shopUuid parameter
+        path: 'seller-finance/:recordId', // Changed from :shopUuid to :recordId
         component: lazy(() => import('views/seller-finance/ShopDetails')),
     },
 ];
