@@ -303,7 +303,7 @@ const ShopDetails = () => {
             </Col>
 
             {/* Right Side (Logo) */}
-            <Col xs={24} md={6} style={{ textAlign: "right", height: "100%" }}>
+            <Col xs={24} md={6} style={{  textAlign: "right", height: "100%" }}>
               <img
                 src="/image.png" // Replace with your actual logo path
                 alt="D2Home Logo"
@@ -401,14 +401,14 @@ const ShopDetails = () => {
             }}
           >
             <thead>
-              <tr style={{ backgroundColor: "#e49000", color: "#000000", borderBottom: "2px solid black", border: "1px solid black" }}>
+              <tr style={{ backgroundColor: "#e49000", color: "#000000" }}>
                 <th
                   style={{
                     padding: "10px 12px",
-                    border: "1px solid #e8e8e8",
                     textAlign: "left",
                     color: "#333",
                     fontWeight: 600,
+                    borderBottom: "3px solid black"
                   }}
                 >
                   Description
@@ -416,10 +416,11 @@ const ShopDetails = () => {
                 <th
                   style={{
                     padding: "10px 12px",
-                    border: "1px solid #e8e8e8",
                     textAlign: "right",
+                    borderBottom: "3px solid black",
                     color: "#333",
                     fontWeight: 600,
+                    
                   }}
                 >
                   Sub Total
@@ -427,10 +428,10 @@ const ShopDetails = () => {
                 <th
                   style={{
                     padding: "10px 12px",
-                    border: "1px solid #e8e8e8",
                     textAlign: "right",
                     color: "#333",
                     fontWeight: 600,
+                    borderBottom: "3px solid black"
                   }}
                 >
                   Total
@@ -443,8 +444,7 @@ const ShopDetails = () => {
                   <td
                     style={{
                       padding: "10px 12px",
-                      border: "1px solid #e8e8e8",
-                      borderTop: index === 0 ? "1px solid #e8e8e8" : "none",
+                      borderBottom: "1px solid black",
                       color: row.isBold ? "#333" : "#555",
                       fontWeight: row.isBold ? 600 : 400,
                     }}
@@ -454,10 +454,9 @@ const ShopDetails = () => {
                   <td
                     style={{
                       padding: "10px 12px",
-                      border: "1px solid #e8e8e8",
-                      borderTop: index === 0 ? "1px solid #e8e8e8" : "none",
                       textAlign: "right",
                       color: "#555",
+                      borderBottom: "1px solid black"
                     }}
                   >
                     {row.sub !== "" ? `$${Number(row.sub).toFixed(2)}` : ""}
@@ -465,18 +464,155 @@ const ShopDetails = () => {
                   <td
                     style={{
                       padding: "10px 12px",
-                      border: "1px solid #e8e8e8",
-                      borderTop: index === 0 ? "1px solid #e8e8e8" : "none",
                       textAlign: "right",
                       color: row.isBold ? "#333" : "#555",
                       fontWeight: row.isBold ? 600 : 400,
                       fontSize: row.isFinal ? "15px" : "13px",
+                      borderBottom: "1px solid black"
                     }}
                   >
                     {row.total !== "" ? `$${Number(row.total).toFixed(2)}` : ""}
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Styled Orders Table */}
+        <div style={{ padding: "0 25px", marginBottom: 25 }}>
+          <Title
+            level={5}
+            style={{ marginBottom: 12, color: "#333", fontWeight: 600 }}
+          >
+            Overview of individual orders - online payments
+          </Title>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "separate",
+              borderSpacing: 0,
+              fontSize: "13px",
+            }}
+          >
+            <thead>
+              <tr style={{ backgroundColor: "#e49000", color: "#000000" }}>
+                <th
+                  style={{
+                    padding: "10px 12px",
+                    textAlign: "left",
+                    color: "#333",
+                    fontWeight: 600,
+                    borderBottom: "3px solid black"
+                  }}
+                >
+                  Serial No.
+                </th>
+                <th
+                  style={{
+                    padding: "10px 12px",
+                    textAlign: "left",
+                    color: "#333",
+                    fontWeight: 600,
+                    borderBottom: "3px solid black"
+                  }}
+                >
+                  Order No.
+                </th>
+                <th
+                  style={{
+                    padding: "10px 12px",
+                    textAlign: "left",
+                    color: "#333",
+                    fontWeight: 600,
+                    borderBottom: "3px solid black"
+                  }}
+                >
+                  Order Date
+                </th>
+                <th
+                  style={{
+                    padding: "10px 12px",
+                    textAlign: "right",
+                    color: "#333",
+                    fontWeight: 600,
+                    borderBottom: "3px solid black"
+                  }}
+                >
+                  Amount
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {shopData.orders.map((order, idx) => (
+                <tr key={order.id}>
+                  <td
+                    style={{
+                      padding: "10px 12px",
+                      borderBottom: "1px solid black",
+                      color: "#555",
+                    }}
+                  >
+                    {idx + 1}
+                  </td>
+                  <td
+                    style={{
+                      padding: "10px 12px",
+                      borderBottom: "1px solid black",
+                      color: "#555",
+                    }}
+                  >
+                    {order.id}
+                  </td>
+                  <td
+                    style={{
+                      padding: "10px 12px",
+                      borderBottom: "1px solid black",
+                      color: "#555",
+                    }}
+                  >
+                    {formatDate(order.updated_at)}
+                  </td>
+                  <td
+                    style={{
+                      padding: "10px 12px",
+                      textAlign: "right",
+                      borderBottom: "1px solid black",
+                      color: "#333",
+                      fontWeight: 600,
+                    }}
+                  >
+                    ${Number(order.total_price).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+              {/* Summary Row */}
+              <tr>
+                <td
+                  colSpan={3}
+                  style={{
+                    padding: "10px 12px",
+                    textAlign: "right",
+                    color: "#333",
+                    fontWeight: 600,
+                    borderBottom: "1px solid black",
+                  }}
+                >
+                  Total:
+                </td>
+                <td
+                  style={{
+                    padding: "10px 12px",
+                    textAlign: "right",
+                    color: "#333",
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    borderBottom: "1px solid black",
+                  }}
+                >
+                  ${financialSummary.totalSales.toFixed(2)}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -495,36 +631,6 @@ const ShopDetails = () => {
           please contact our service center [{companyDetails.email}]. Details of
           this invoice can be found on the attached page.
         </Paragraph>
-
-        <div style={{ padding: "0 25px", marginBottom: 25 }}>
-          <Title
-            level={5}
-            style={{ marginBottom: 12, color: "#333", fontWeight: 600 }}
-          >
-            Overview of individual orders - online payments
-          </Title>
-          <Table
-            columns={orderColumns}
-            dataSource={shopData.orders || []}
-            rowKey="id"
-            pagination={false}
-            bordered
-            size="middle"
-            className="invoice-orders-table"
-            summary={() => (
-              <Table.Summary.Row>
-                <Table.Summary.Cell index={0} colSpan={3}>
-                  <Text style={strongTextStyle}>Total:</Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={1} align="right">
-                  <Text style={{ ...strongTextStyle, fontSize: "14px" }}>
-                    ${financialSummary.totalSales.toFixed(2)}
-                  </Text>
-                </Table.Summary.Cell>
-              </Table.Summary.Row>
-            )}
-          />
-        </div>
 
         <div
           style={{
