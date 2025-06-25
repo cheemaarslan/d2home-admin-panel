@@ -9,7 +9,12 @@ const shopService = {
   update: (id, params) =>
     request.put(`dashboard/admin/shops/${id}`, {}, { params }),
   setVerify: (uuid) => request.post(`dashboard/admin/shops/${uuid}/verify`, {}),
-setPosToggle: (uuid) => request.post(`dashboard/admin/shops/${uuid}/pos-status`),
+  setPosToggle: (uuid, newStatus) =>
+    request.post(`dashboard/admin/shops/${uuid}/pos-status`, { pos_status: newStatus ? 1 : 0 })
+      .then((res) => {
+        console.log('setPosToggle API response:', res.data);
+        return { pos_access: newStatus }; // Fallback to newStatus if API returns data: null
+      }),
   delete: (params) =>
     request.delete(`dashboard/admin/shops/delete`, { params }),
   search: (params) => request.get('dashboard/admin/shops/search', { params }),

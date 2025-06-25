@@ -28,7 +28,6 @@ import ResultModal from '../../components/result-modal';
 import formatSortType from '../../helpers/formatSortType';
 import { updateShopPosStatus } from '../../redux/slices/shop';
 
-
 const { TabPane } = Tabs;
 const colors = ['blue', 'red', 'gold', 'volcano', 'cyan', 'lime'];
 const roles = ['all', 'new', 'approved', 'rejected', 'deleted_at'];
@@ -52,39 +51,37 @@ const Shops = () => {
   const [loadingBtn, setLoadingBtn] = useState(false);
   const { shops, meta, loading, params } = useSelector(
     (state) => state.shop,
-    shallowEqual
+    shallowEqual,
   );
 
 const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
-  const [isActive, setIsActive] = useState(pos_access);
+  const [isActive, setIsActive] = useState(!!pos_access); // Convert to boolean (handles true/false, 1/0, "1"/"0")
   const dispatch = useDispatch();
   const { t } = useTranslation();
 
-  // Sync internal state with prop changes
   useEffect(() => {
-    setIsActive(pos_access);
+    console.log('PosToggleSwitch props:', { pos_access, type: typeof pos_access, uuid });
+    setIsActive(!!pos_access); // Sync with boolean pos_access
   }, [pos_access]);
 
   const handleToggle = async () => {
     const newStatus = !isActive;
-    setIsActive(newStatus); // Optimistic update
+    setIsActive(newStatus);
 
     try {
-      const response = await shopService.setPosToggle(uuid);
-      
-      // Validate response structure
+      const response = await shopService.setPosToggle(uuid, newStatus);
+      console.log('setPosToggle response:', response);
+
       if (response && typeof response.pos_access !== 'undefined') {
         dispatch(updateShopPosStatus({ 
           uuid, 
-          pos_access: response.pos_access 
+          pos_access: response.pos_access // Expect true/false from API
         }));
         
-        // Only show success if the server confirmed the change
         if (response.pos_access === newStatus) {
           toast.success(t('successfully.updated'));
         } else {
-          // Revert if server didn't confirm our change
-          setIsActive(response.pos_access);
+          setIsActive(!!response.pos_access);
           toast.warning(t('status.not.updated'));
         }
       } else {
@@ -92,11 +89,9 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
       }
     } catch (error) {
       console.error('Toggle failed:', error);
-      setIsActive(!newStatus); // Revert on error
+      setIsActive(!newStatus);
       toast.error(error.message || t('error.occurred'));
-      
-      // Force refresh from server
-      dispatch(fetchShops()); 
+      dispatch(fetchShops());
     }
   };
 
@@ -105,12 +100,11 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
       checked={isActive}
       disabled={disabled}
       onChange={handleToggle}
-      loading={isActive !== pos_access} // Show loading if out of sync
+      loading={isActive !== !!pos_access}
+      aria-label={`Toggle POS access for shop ${uuid}`}
     />
   );
 };
-
-  
 
   const goToEdit = (row) => {
     dispatch(
@@ -118,7 +112,7 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
         id: 'edit-shop',
         url: `shop/${row.uuid}`,
         name: t('edit.shop'),
-      })
+      }),
     );
     navigate(`/shop/${row.uuid}`, { state: 'edit' });
   };
@@ -129,7 +123,7 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
         id: 'shop-clone',
         url: `shop-clone/${row.uuid}`,
         name: t('shop.clone'),
-      })
+      }),
     );
     navigate(`/shop-clone/${row.uuid}`, { state: 'clone' });
   };
@@ -148,27 +142,27 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
       is_show: true,
       key: 'title',
     },
-   {
-  title: t('translations'),
-  dataIndex: 'locales',
-  is_show: true,
-  key: 'locales',
-  render: (_, row) => {
-    return (
-      <Space>
-        {row.locales?.map((item, index) => (
-          <Tag 
-            key={`${row.id}-${item}-${index}`}  // Added unique key
-            className='text-uppercase' 
-            color={[colors[index]]}
-          >
-            {item}
-          </Tag>
-        ))}
-      </Space>
-    );
-  },
-},
+    {
+      title: t('translations'),
+      dataIndex: 'locales',
+      is_show: true,
+      key: 'locales',
+      render: (_, row) => {
+        return (
+          <Space>
+            {row.locales?.map((item, index) => (
+              <Tag
+                key={`${row.id}-${item}-${index}`} // Added unique key
+                className='text-uppercase'
+                color={[colors[index]]}
+              >
+                {item}
+              </Tag>
+            ))}
+          </Space>
+        );
+      },
+    },
     {
       title: t('logo'),
       dataIndex: 'logo_img',
@@ -183,8 +177,8 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
               row.deleted_at
                 ? 'https://via.placeholder.com/150'
                 : img
-                ? img
-                : 'https://via.placeholder.com/150'
+                  ? img
+                  : 'https://via.placeholder.com/150'
             }
             effect='blur'
             width={50}
@@ -208,8 +202,8 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
               row.deleted_at
                 ? 'https://via.placeholder.com/150'
                 : img
-                ? img
-                : 'https://via.placeholder.com/150'
+                  ? img
+                  : 'https://via.placeholder.com/150'
             }
             effect='blur'
             width={50}
@@ -253,30 +247,31 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
       render: (active, row) => {
         return (
           <Switch
-             onChange={() => {
-    setIsModalVisible(true);
-    setId([row.id]);
-    setVerify(true);
-   
-  }}
-
+            onChange={() => {
+              setIsModalVisible(true);
+              setId([row.id]);
+              setVerify(true);
+            }}
             disabled={row.deleted_at}
             checked={active}
           />
         );
       },
     },
-{
-  title: t('pos'),
+ {
+  title: t('Pos'),
   dataIndex: 'pos_access',
   is_show: true,
-  render: (pos_access, row) => (
-    <PosToggleSwitch 
-      pos_access={pos_access}
-      disabled={row.deleted_at}
-      uuid={row.uuid}
-    />
-  )
+  render: (pos_access, row) => {
+    console.log(`Table row ${row.uuid} pos_access:`, pos_access, typeof pos_access);
+    return (
+      <PosToggleSwitch 
+        pos_access={pos_access}
+        disabled={!!row.deleted_at}
+        uuid={row.uuid}
+      />
+    );
+  },
 },
     {
       title: t('status'),
@@ -326,7 +321,6 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
                   setIsModalVisible(true);
                   setText(true);
                   setVerify(false);
-          
                 }}
               />
             ) : (
@@ -347,8 +341,8 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
       immutable === 'deleted_at'
         ? undefined
         : immutable === 'all'
-        ? undefined
-        : immutable,
+          ? undefined
+          : immutable,
     deleted_at: immutable === 'deleted_at' ? immutable : undefined,
     page: data?.page,
     perPage: data?.perPage,
@@ -363,7 +357,7 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
         {},
         ...id.map((item, index) => ({
           [`ids[${index}]`]: item,
-        }))
+        })),
       ),
     };
     shopService
@@ -374,7 +368,7 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
         dispatch(fetchShops(paramsData));
         setText(null);
         setVerify(false);
-       
+
         setId(null);
       })
       .finally(() => setLoadingBtn(false));
@@ -420,7 +414,6 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
       });
   };
 
-
   function onChangePagination(pagination, filter, sorter) {
     const { pageSize: perPage, current: page } = pagination;
     const { field: column, order } = sorter;
@@ -429,16 +422,16 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
       setMenuData({
         activeMenu,
         data: { ...activeMenu.data, perPage, page, column, sort },
-      })
+      }),
     );
   }
 
- useEffect(() => {
-  if (activeMenu.refetch) {
-    dispatch(fetchShops(paramsData));
-    dispatch(disableRefetch(activeMenu));
-  }
-}, [activeMenu, dispatch, paramsData, activeMenu.refetch]); // Add dependencies
+  useEffect(() => {
+    if (activeMenu.refetch) {
+      dispatch(fetchShops(paramsData));
+      dispatch(disableRefetch(activeMenu));
+    }
+  }, [activeMenu, dispatch, paramsData, activeMenu.refetch]); // Add dependencies
 
   useDidUpdate(() => {
     dispatch(fetchShops(paramsData));
@@ -450,7 +443,7 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
         id: 'add-shop',
         url: `shop/add`,
         name: t('add.shop'),
-      })
+      }),
     );
     navigate(`/shop/add`);
   };
@@ -461,7 +454,7 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
       setMenuData({
         activeMenu,
         data: { ...data, ...items },
-      })
+      }),
     );
   };
 
@@ -577,8 +570,8 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
           verify
             ? t('set.verify.product')
             : text
-            ? t('delete')
-            : t('all.delete')
+              ? t('delete')
+              : t('all.delete')
         }
         loading={loadingBtn}
         setText={setId}
@@ -603,8 +596,6 @@ const PosToggleSwitch = ({ pos_access, disabled, uuid }) => {
           loading={loadingBtn}
           setText={setId}
           setVerify={setVerify}
-          
-
         />
       )}
     </Card>

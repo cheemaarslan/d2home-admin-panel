@@ -15,6 +15,7 @@ const initialState = {
 export const fetchShops = createAsyncThunk('shop/fetchShops', async (params = {}, { rejectWithValue }) => {
   try {
     const res = await shopService.getAll({ ...initialState.params, ...params });
+    console.log('fetchShops API response:', res.data);
     return res;
   } catch (error) {
     return rejectWithValue(error.response?.data || error.message);
@@ -57,7 +58,7 @@ const shopSlice = createSlice({
           status: item.status,
           deleted_at: item.deleted_at,
           verify: item.verify,
-  pos_access: Boolean(item.pos_status), // Ensure this matches your API response
+          pos_access: item.pos_access, // Use pos_access from API
         }));
         state.meta = payload.meta;
         state.params.page = payload.meta.current_page;

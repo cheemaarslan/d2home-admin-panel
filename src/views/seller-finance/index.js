@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SellerFinanceService from '../../services/seller-finance';
-import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { Table, Button, Spin, Typography, Alert, Tabs, Space, message } from 'antd';
+import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, Button, Spin, Typography, Alert, Tabs, Space, message, Input } from 'antd';
 
 // Custom Styles
 const componentStyles = `
@@ -31,6 +31,12 @@ const componentStyles = `
   .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
     color: #1890ff !important;
   }
+    .top-header{
+  display : flex;
+    align-items : center;
+    justify-content : space-between;
+    width : 100 %;
+  }
 
   .ant-tabs-ink-bar {
     background: #1890ff !important;
@@ -40,7 +46,7 @@ const componentStyles = `
 
   .ant-table-wrapper {
     border-radius: 8px;
-    overflow: hidden;
+    overflow-x: scroll;
   }
 
   .ant-table-thead > tr > th {
@@ -68,16 +74,29 @@ const componentStyles = `
     background-color: #d9f0ff !important;
     border-color: #69c0ff !important;
   }
+
+  .search-container {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .search-input {
+    width: 300px;
+  }
 `;
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
+const { Search } = Input;
 
 const IndexPage = () => {
   const [financeData, setFinanceData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('unpaid'); // Default to 'unpaid'
+  const [activeTab, setActiveTab] = useState('unpaid');
+  const [searchText, setSearchText] = useState('');
   const [pagination, setPagination] = useState({
     page: 1,
     perPage: 10,
@@ -98,7 +117,7 @@ const IndexPage = () => {
    
       const data = Array.isArray(response.data) ? response.data : [];
       setFinanceData(data);
-    
+      setFilteredData(data); // Initialize filtered data
       setPagination(prev => ({
         ...prev,
         total: response.meta?.total ?? data.length ?? 0
@@ -106,11 +125,26 @@ const IndexPage = () => {
     } catch (err) {
       setError(err.message);
       setFinanceData([]);
-    
+      setFilteredData([]);
     } finally {
       setLoading(false);
     }
   }, [activeTab, pagination.page, pagination.perPage]);
+
+  // Filter data based on search text
+  useEffect(() => {
+    if (searchText) {
+      const filtered = financeData.filter((record) => {
+        const sellerName = record.shop?.name?.toLowerCase() || '';
+        return sellerName.includes(searchText.toLowerCase());
+      });
+      setFilteredData(filtered);
+      setPagination(prev => ({ ...prev, total: filtered.length }));
+    } else {
+      setFilteredData(financeData);
+      setPagination(prev => ({ ...prev, total: financeData.length }));
+    }
+  }, [searchText, financeData]);
 
   useEffect(() => {
     fetchFinanceData();
@@ -147,21 +181,23 @@ const IndexPage = () => {
   };
 
   const handleTabChange = (key) => {
-   
     setActiveTab(key);
+    setSearchText(''); // Reset search when changing tabs
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-
-
- const handleViewShop = (record) => {
-    if (!record) {
+  const handleViewShop = (record) => {
+    if (!record || !record.record_id) {
       message.error('This shop has no valid identifier');
       return;
     }
     navigate(`/seller-finance/${record.record_id}`);
   };
 
+  const handleSearch = (value) => {
+    setSearchText(value);
+    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page when searching
+  };
 
   const columns = [
     {
@@ -219,16 +255,14 @@ const IndexPage = () => {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => {
-       
         if (record.status === 'unpaid') {
           return (
             <Space>
               <Button
-                 type="primary"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewShop(record.record_id)}
-            disabled={!record.record_id || isNaN(parseInt(record.record_id))}
-                
+                type="primary"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewShop(record)}
+                disabled={!record.record_id || isNaN(parseInt(record.record_id))}
               >
                 View
               </Button>
@@ -253,7 +287,7 @@ const IndexPage = () => {
           <Button
             type="primary"
             icon={<EyeOutlined />}
-            onClick={() => handleViewShop(record.record_id)}
+            onClick={() => handleViewShop(record)}
             disabled={!record.record_id || isNaN(parseInt(record.record_id))}
           >
             View
@@ -271,44 +305,62 @@ const IndexPage = () => {
     });
   };
 
- 
   return (
     <>
       <style>{componentStyles}</style>
-    <div className="index-container">
-      <div className="finance-card">
-        <Title level={2} style={{ marginBottom: '24px' }}>Weekly Finance Overview</Title>
+      <div className="index-container">
+        <div className="finance-card">
+          <div className='top-header'>
+            <Title level={2} style={{ marginBottom: '24px' }}>Weekly Finance Overview</Title>
+            <div className="search-container">
+            <Search
+              placeholder="Search seller"
+              allowClear
+              enterButton={<SearchOutlined />}
+              size="large"
+              className="search-input"
+              onSearch={handleSearch}
+              onChange={(e) => setSearchText(e.target.value)}
+              value={searchText}
+            />
+          </div>
+          </div>
 
-        <Tabs activeKey={activeTab} onChange={handleTabChange}>
-          <TabPane tab="Paid" key="paid" />
-          <TabPane tab="Unpaid" key="unpaid" />
-          <TabPane tab="Canceled" key="canceled" />
-        </Tabs>
+          <Tabs activeKey={activeTab} onChange={handleTabChange}>
+            <TabPane tab="Unpaid" key="unpaid" />
+            <TabPane tab="Paid" key="paid" />
+            <TabPane tab="Canceled" key="canceled" />
+          </Tabs>
 
-        {loading ? (
-          <Spin size="large" style={{ display: 'flex', justifyContent: 'center', marginTop: 50 }} />
-        ) : error ? (
-          <Alert message="Error" description={error} type="error" showIcon />
-        ) : financeData.length === 0 ? (
-          <Alert message="No data available" description={`No ${activeTab} records found.`} type="info" showIcon />
-        ) : (
-          <Table
-            columns={columns}
-            dataSource={financeData}
-            rowKey={(record) => `${record.shop?.id}-${record.record_id}`}
-            pagination={{
-              current: pagination.page,
-              pageSize: pagination.perPage,
-              total: pagination.total,
-              showSizeChanger: true,
-              pageSizeOptions: ['10', '20', '50']
-            }}
-            onChange={handleTableChange}
-            onRow={(record) => ({})}
-          />
-        )}
+
+          {loading ? (
+            <Spin size="large" style={{ display: 'flex', justifyContent: 'center', marginTop: 50 }} />
+          ) : error ? (
+            <Alert message="Error" description={error} type="error" showIcon />
+          ) : filteredData.length === 0 ? (
+            <Alert
+              message="No data available"
+              description={searchText ? `No sellers found matching "${searchText}"` : `No ${activeTab} records found.`}
+              type="info"
+              showIcon
+            />
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={filteredData}
+              rowKey={(record) => `${record.shop?.id}-${record.record_id}`}
+              pagination={{
+                current: pagination.page,
+                pageSize: pagination.perPage,
+                total: pagination.total,
+                showSizeChanger: true,
+                pageSizeOptions: ['10', '20', '50']
+              }}
+              onChange={handleTableChange}
+            />
+          )}
+        </div>
       </div>
-    </div>
     </>
   );
 };

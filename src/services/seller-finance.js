@@ -85,16 +85,14 @@ const SellerFinanceService = {
     }
   },
 getShopDetails: async (recordId) => {
+  console.log(recordId);
   if (!recordId || isNaN(parseInt(recordId))) {
     throw new Error('Valid Record ID is required');
   }
   try {
     const response = await request.post(`/dashboard/admin/seller-finance/details`, { record_id: recordId, lang: 'en' });
-     console.log('Shop Details:', response.data); // Add logging for debugging
     return response.data;
-   
   } catch (error) {
-    console.error('API Error:', error.response?.data, error.message); // Add detailed logging
     const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch shop details';
     throw new Error(errorMessage);
   }
@@ -109,6 +107,8 @@ getShopDetails: async (recordId) => {
     return request.get(`/dashboard/admin/seller-finance/download-invoice/${invoiceId}`, {
       params,
       responseType: 'blob',
+      //extend time of resposne
+      timeout: 600000 // 60 seconds
     })
   },
 // Example usage in a component:
