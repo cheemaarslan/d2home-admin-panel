@@ -3,8 +3,10 @@ export const PROJECT_NAME = 'Foodyman marketplace';
 
 export const BASE_URL = 
   process.env.REACT_APP_BASE_URL || ' http://127.0.0.1:8000';
+  // process.env.REACT_APP_BASE_URL || 'https://api.d2home.com.au';
 
-export const WEBSITE_URL = 'http://localhost:3000';
+export const WEBSITE_URL = 'http://localhost:3000/';
+// export const WEBSITE_URL = 'https://backend.d2home.com.au';
 
 export const api_url = BASE_URL + '/api/v1/';
 export const api_url_admin = BASE_URL + '/api/v1/dashboard/admin/';
