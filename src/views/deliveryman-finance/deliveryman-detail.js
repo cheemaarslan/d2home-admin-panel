@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import getInvoiceLogo from '../../helpers/getInvoiceLogo';
 import {
   Typography,
   Spin,
@@ -376,7 +377,7 @@ const handleDownloadInvoice = async () => {
         }}
       >
         {/* MODIFICATION START: Download Invoice Button moved here */}
-        <div style={{ textAlign: 'right', paddingBottom: '20px' }}>
+        <div style={{ textAlign: 'right', padding: '20px 25px 10px 25px' }}>
           <Button
             type='primary'
             icon={<DownloadOutlined />}
@@ -439,15 +440,15 @@ const handleDownloadInvoice = async () => {
             </Col>
 
             {/* Right Side (Logo) */}
-            <Col xs={24} md={6} style={{ textAlign: 'right', height: '100%' }}>
+            <Col xs={24} md={6} style={{ textAlign: 'center', height: '100%' }}>
               <img
-               src="/invoice-image.png" // Replace with your actual logo path
+                src={getInvoiceLogo()} // Use the actual logo URL returned by the function
                 alt='D2Home Logo'
                 style={{
-                  height: '100%',
-                  width: '100%',
+                  height: 100,
+                  width: 100,
                   objectFit: 'cover',
-                  display: 'block',
+                  borderRadius: '50%',
                 }}
               />
             </Col>
@@ -538,20 +539,15 @@ const handleDownloadInvoice = async () => {
           >
             <thead>
               <tr
-                style={{
-                  backgroundColor: '#e49000',
-                  color: '#000000',
-                  borderBottom: '2px solid black',
-                  border: '1px solid black',
-                }}
+                style={{ backgroundColor: '#e49000' }}
               >
                 <th
                   style={{
                     padding: '10px 12px',
-                    border: '1px solid #e8e8e8',
                     textAlign: 'left',
                     color: '#333',
                     fontWeight: 600,
+                    borderBottom: '3px solid black',
                   }}
                 >
                   Description
@@ -559,10 +555,10 @@ const handleDownloadInvoice = async () => {
                 <th
                   style={{
                     padding: '10px 12px',
-                    border: '1px solid #e8e8e8',
-                    textAlign: 'right',
+                    textAlign: 'left',
                     color: '#333',
                     fontWeight: 600,
+                    borderBottom: '3px solid black',
                   }}
                 >
                   Sub Total
@@ -570,10 +566,10 @@ const handleDownloadInvoice = async () => {
                 <th
                   style={{
                     padding: '10px 12px',
-                    border: '1px solid #e8e8e8',
-                    textAlign: 'right',
+                    textAlign: 'left',
                     color: '#333',
                     fontWeight: 600,
+                    borderBottom: '3px solid black',
                   }}
                 >
                   Total
@@ -586,10 +582,8 @@ const handleDownloadInvoice = async () => {
                   <td
                     style={{
                       padding: '10px 12px',
-                      border: '1px solid #e8e8e8',
-                      borderTop: index === 0 ? '1px solid #e8e8e8' : 'none',
-                      color: row.isBold ? '#333' : '#555',
-                      fontWeight: row.isBold ? 600 : 400,
+                      borderBottom: '1px solid black',
+                      color: '#555',
                     }}
                   >
                     {row.desc}
@@ -597,9 +591,7 @@ const handleDownloadInvoice = async () => {
                   <td
                     style={{
                       padding: '10px 12px',
-                      border: '1px solid #e8e8e8',
-                      borderTop: index === 0 ? '1px solid #e8e8e8' : 'none',
-                      textAlign: 'right',
+                      borderBottom: '1px solid black',
                       color: '#555',
                     }}
                   >
@@ -608,12 +600,8 @@ const handleDownloadInvoice = async () => {
                   <td
                     style={{
                       padding: '10px 12px',
-                      border: '1px solid #e8e8e8',
-                      borderTop: index === 0 ? '1px solid #e8e8e8' : 'none',
-                      textAlign: 'right',
-                      color: row.isBold ? '#333' : '#555',
-                      fontWeight: row.isBold ? 600 : 400,
-                      fontSize: row.isFinal ? '15px' : '13px',
+                      borderBottom: '1px solid black',
+                      color: '#555',
                     }}
                   >
                     {row.total !== '' ? `$${Number(row.total).toFixed(2)}` : ''}
@@ -646,27 +634,133 @@ const handleDownloadInvoice = async () => {
           >
             Overview of individual orders - online payments
           </Title>
-          <Table
-            columns={orderColumns}
-            dataSource={deliveryManData.orders || []}
-            rowKey='id'
-            pagination={false}
-            bordered
-            size='middle'
-            className='invoice-orders-table'
-            summary={() => (
-              <Table.Summary.Row style={{ backgroundColor: '#fafafa' }}>
-                <Table.Summary.Cell index={0} colSpan={3}>
-                  <Text style={strongTextStyle}>Total:</Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={1} align='right'>
-                  <Text style={{ ...strongTextStyle, fontSize: '14px' }}>
-                    ${financialSummary.totalSales.toFixed(2)}
-                  </Text>
-                </Table.Summary.Cell>
-              </Table.Summary.Row>
-            )}
-          />
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'separate',
+              borderSpacing: 0,
+              fontSize: '13px',
+            }}
+          >
+            <thead>
+              <tr style={{ backgroundColor: '#e49000' }}>
+                <th
+                  style={{
+                    padding: '10px 12px',
+                    textAlign: 'left',
+                    color: '#333',
+                    fontWeight: 600,
+                    borderBottom: '3px solid black',
+                  }}
+                >
+                  Serial No.
+                </th>
+                <th
+                  style={{
+                    padding: '10px 12px',
+                    textAlign: 'left',
+                    color: '#333',
+                    fontWeight: 600,
+                    borderBottom: '3px solid black',
+                  }}
+                >
+                  Order No.
+                </th>
+                <th
+                  style={{
+                    padding: '10px 12px',
+                    textAlign: 'left',
+                    color: '#333',
+                    fontWeight: 600,
+                    borderBottom: '3px solid black',
+                  }}
+                >
+                  Order Date
+                </th>
+                <th
+                  style={{
+                    padding: '10px 12px',
+                    textAlign: 'right',
+                    color: '#333',
+                    fontWeight: 600,
+                    borderBottom: '3px solid black',
+                  }}
+                >
+                  Amount
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {(deliveryManData.orders || []).map((order, idx) => (
+                <tr key={order.id}>
+                  <td
+                    style={{
+                      padding: '10px 12px',
+                      borderBottom: '1px solid black',
+                      color: '#555',
+                    }}
+                  >
+                    {idx + 1}
+                  </td>
+                  <td
+                    style={{
+                      padding: '10px 12px',
+                      borderBottom: '1px solid black',
+                      color: '#555',
+                    }}
+                  >
+                    {order.id}
+                  </td>
+                  <td
+                    style={{
+                      padding: '10px 12px',
+                      borderBottom: '1px solid black',
+                      color: '#555',
+                    }}
+                  >
+                    {formatDate(order.updated_at)}
+                  </td>
+                  <td
+                    style={{
+                      padding: '10px 12px',
+                      borderBottom: '1px solid black',
+                      color: '#333',
+                      textAlign: 'right',
+                      fontWeight: 600,
+                    }}
+                  >
+                    ${(Number(order.total_price) || 0).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+              <tr style={{ backgroundColor: '#fafafa' }}>
+                <td
+                  colSpan={3}
+                  style={{
+                    padding: '10px 12px',
+                    color: '#333',
+                    fontWeight: 600,
+                    textAlign: 'right',
+                    borderBottom: 'none',
+                  }}
+                >
+                  Total:
+                </td>
+                <td
+                  style={{
+                    padding: '10px 12px',
+                    color: '#333',
+                    fontWeight: 600,
+                    textAlign: 'right',
+                    borderBottom: 'none',
+                    fontSize: '14px',
+                  }}
+                >
+                  ${financialSummary.totalSales.toFixed(2)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <div

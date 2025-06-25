@@ -7,6 +7,7 @@ import AppLayout from 'layout/app-layout';
 import { WelcomeLayout } from 'layout/welcome-layout';
 import Providers from 'providers';
 import { Suspense, useEffect, useState } from 'react';
+import { WeekRangeProvider } from 'context/WeekRangeContext';
 import {
   Route,
   BrowserRouter as Router,
@@ -74,61 +75,63 @@ const App = () => {
 
   return (
     <Providers>
-     <Router>
-  <Routes>
-    <Route
-      index
-      path='/login'
-      element={
-        <PathLogout>
-          <Login />
-        </PathLogout>
-      }
-    />
-    <Route
-      path='/welcome'
-      element={
-        <WelcomeLayout>
-          <Welcome />
-        </WelcomeLayout>
-      }
-    />
-    <Route
-      path='/installation'
-      element={
-        <WelcomeLayout>
-          <GlobalSettings />
-        </WelcomeLayout>
-      }
-    />
-    
-    {/* Redirect '/' to dashboard explicitly */}
-    <Route path='/' element={<Navigate to='/dashboard' />} />
+      <Router>
+        <WeekRangeProvider>
+        <Routes>
+          <Route
+            index
+            path='/login'
+            element={
+              <PathLogout>
+                <Login />
+              </PathLogout>
+            }
+          />
+          <Route
+            path='/welcome'
+            element={
+              <WelcomeLayout>
+                <Welcome />
+              </WelcomeLayout>
+            }
+          />
+          <Route
+            path='/installation'
+            element={
+              <WelcomeLayout>
+                <GlobalSettings />
+              </WelcomeLayout>
+            }
+          />
 
-    {/* Protected app layout */}
-    <Route
-      path='/*'
-      element={
-        <ProtectedRoute>
-          <AppLayout />
-        </ProtectedRoute>
-      }
-    >
-      {AllRoutes.map(({ path, component: Component }) => (
-        <Route key={path} path={path} element={<Component />} />
-      ))}
-    </Route>
+          {/* Redirect '/' to dashboard explicitly */}
+          <Route path='/' element={<Navigate to='/dashboard' />} />
 
-    <Route
-      path='*'
-      element={
-        <Suspense fallback={<Loading />}>
-          <NotFound />
-        </Suspense>
-      }
-    />
-  </Routes>
-   <ToastContainer
+          {/* Protected app layout */}
+          <Route
+            path='/*'
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            {AllRoutes.map(({ path, component: Component }) => (
+              <Route key={path} path={path} element={<Component />} />
+            ))}
+          </Route>
+
+          <Route
+            path='*'
+            element={
+              <Suspense fallback={<Loading />}>
+                <NotFound />
+              </Suspense>
+            }
+          />
+        </Routes>
+        </WeekRangeProvider>
+        <ToastContainer
           className='antd-toast'
           position='top-right'
           autoClose={2500}
@@ -138,7 +141,7 @@ const App = () => {
           draggable
         />
         {loading && <PageLoading />}
-</Router>
+      </Router>
     </Providers>
   );
 };

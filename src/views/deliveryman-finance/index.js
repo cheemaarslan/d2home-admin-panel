@@ -19,10 +19,11 @@ const componentStyles = `
     border: 1px solid #e8e8e8;
   }
 
-  . top-header{
+  .top-header{
   display : flex;
     align-items : center;
-    justify-content : center;
+    justify-content : space-between;
+    width : 100 %;
   }
 
   .ant-tabs-nav {
