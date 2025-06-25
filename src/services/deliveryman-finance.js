@@ -39,44 +39,111 @@ const DeliverymanFinanceService = {
     }
   },
 
-getDeliveryManDetails: async (id, week_range ) => {
+  getDeliveryManDetails: async (id, week_range) => {
     if (!id || !week_range) {
-        throw new Error('Deliveryman ID, week range are required');
+      throw new Error('Deliveryman ID, week range are required');
     }
 
     console.log('My payload: ', { week_range });
     console.log('Id: ', id);
 
     try {
-        const response = await request.get(
-            `/dashboard/admin/deliveryman-finance/deliveryman-details/${id}`,
-            { params: { week_range } }
-        );
-        return response.data;
+      const response = await request.get(
+        `/dashboard/admin/deliveryman-finance/deliveryman-details/${id}`,
+        { params: { week_range } }
+      );
+      return response.data;
     } catch (error) {
-        console.error(`Error fetching details for delivery man ${id}:`, error);
-        throw error;
+      console.error(`Error fetching details for delivery man ${id}:`, error);
+      throw error;
     }
-},
+  },
 
 
 
-downloadInvoice: async (invoiceId, params = {}, week_range) => {
-  if (!invoiceId) {
-    throw new Error("Invoice ID is required");
-  }
-  return request.get(
-    `/dashboard/admin/deliveryman-finance/download-invoice/${invoiceId}`,
-    {
-      params: {
-        ...params,
-        week_range,
-      },
-      responseType: 'blob',
-      timeout: 32000,
+  downloadInvoice: async (invoiceId, params = {}, week_range) => {
+    if (!invoiceId) {
+      throw new Error("Invoice ID is required");
     }
-  );
-},
+    return request.get(
+      `/dashboard/admin/deliveryman-finance/download-invoice/${invoiceId}`,
+      {
+        params: {
+          ...params,
+          week_range,
+        },
+        responseType: 'blob',
+        timeout: 32000,
+      }
+    );
+  },
+
+  exportToExcel: async (deliverymanIdid) => {
+    if (!deliverymanIdid || isNaN(parseInt(deliverymanIdid))) {
+      throw new Error('Valid Record ID is required');
+    }
+    try {
+      const response = await request.post(
+        `/dashboard/admin/deliveryman-finance/download-excel`,
+        { deliverymanIdid: deliverymanIdid, lang: 'en' },
+        {
+          responseType: 'blob' // This is crucial for file downloads
+        }
+      );
+
+      // Create a safe filename fallback
+      const timestamp = new Date().toISOString().slice(0, 10);
+      let filename = `shop_invoice_${timestamp}.xlsx`;
+
+      // Try to get filename from headers (more robust approach)
+      if (response.headers) {
+        const disposition = response.headers['content-disposition'] ||
+          response.headers.get('content-disposition');
+        if (disposition) {
+          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+          if (matches && matches[1]) {
+            filename = matches[1].replace(/['"]/g, '');
+          }
+        }
+      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        link.remove();
+      }, 100);
+
+      return true;
+    } catch (error) {
+      console.error('Export error:', error);
+      let errorMessage = 'Failed to download Excel file';
+
+      // Try to parse error message from blob if response was blob
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const result = JSON.parse(text);
+          errorMessage = result.message || errorMessage;
+        } catch (e) {
+          console.error('Error parsing error blob:', e);
+        }
+      } else {
+        errorMessage = error.response?.data?.message ||
+          error.message ||
+          errorMessage;
+      }
+
+      throw new Error(errorMessage);
+    }
+  },
 
   updateStatus: async (deliverymanId, payload) => {
     if (!deliverymanId || !payload.status || !payload.week_range) {

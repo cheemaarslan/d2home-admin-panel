@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SellerFinanceService from '../../services/seller-finance';
-import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined, FileExcelOutlined } from '@ant-design/icons';
 import { Table, Button, Spin, Typography, Alert, Tabs, Space, message, Input } from 'antd';
+
 
 // Custom Styles
 const componentStyles = `
@@ -84,6 +85,15 @@ const componentStyles = `
   .search-input {
     width: 300px;
   }
+    .ant-btn-default:not(:disabled):not(.ant-btn-dangerous) {
+  color: #1d6f42;
+  border-color: #1d6f42;
+}
+
+.ant-btn-default:not(:disabled):not(.ant-btn-dangerous):hover {
+  color: #1a6139;
+  border-color: #1a6139;
+}
 `;
 
 const { Title } = Typography;
@@ -114,7 +124,7 @@ const IndexPage = () => {
         per_page: pagination.perPage,
         status: activeTab,
       });
-   
+
       const data = Array.isArray(response.data) ? response.data : [];
       setFinanceData(data);
       setFilteredData(data); // Initialize filtered data
@@ -162,6 +172,32 @@ const IndexPage = () => {
       fetchFinanceData();
     } catch (err) {
       message.error({ content: `Failed to update: ${err.message}`, key, duration: 3 });
+    }
+  };
+  
+  const handleExportExcel = async (record) => {
+    if (!record?.record_id) {
+      message.error('Invalid record data for export');
+      return;
+    }
+
+    const key = `export-${record.shop.uuid}-${record.record_id}`;
+    message.loading({ content: 'Preparing export...', key });
+
+    try {
+      await SellerFinanceService.exportToExcel(record.record_id);
+      message.success({
+        content: 'Export downloaded successfully!',
+        key,
+        duration: 2
+      });
+    } catch (err) {
+      console.error('Export error:', err);
+      message.error({
+        content: `Export failed: ${err.message}`,
+        key,
+        duration: 4
+      });
     }
   };
 
@@ -267,6 +303,16 @@ const IndexPage = () => {
                 View
               </Button>
               <Button
+                key="excel"
+                type="default"
+                icon={<FileExcelOutlined />}
+                onClick={() => handleExportExcel(record)}
+                disabled={!record.record_id || isNaN(parseInt(record.record_id))}
+                style={{ color: '#1d6f42', borderColor: '#1d6f42' }}
+              >
+                Excel
+              </Button>
+              <Button
                 className="btn-paid"
                 icon={<CheckCircleOutlined />}
                 onClick={() => handleMarkAsPaid(record)}
@@ -313,17 +359,17 @@ const IndexPage = () => {
           <div className='top-header'>
             <Title level={2} style={{ marginBottom: '24px' }}>Weekly Finance Overview</Title>
             <div className="search-container">
-            <Search
-              placeholder="Search seller"
-              allowClear
-              enterButton={<SearchOutlined />}
-              size="large"
-              className="search-input"
-              onSearch={handleSearch}
-              onChange={(e) => setSearchText(e.target.value)}
-              value={searchText}
-            />
-          </div>
+              <Search
+                placeholder="Search seller"
+                allowClear
+                enterButton={<SearchOutlined />}
+                size="large"
+                className="search-input"
+                onSearch={handleSearch}
+                onChange={(e) => setSearchText(e.target.value)}
+                value={searchText}
+              />
+            </div>
           </div>
 
           <Tabs activeKey={activeTab} onChange={handleTabChange}>
