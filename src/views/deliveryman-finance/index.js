@@ -1,8 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DeliverymanFinanceService from '../../services/deliveryman-finance';
-import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined, FileExcelOutlined } from '@ant-design/icons';
 import { Table, Button, Spin, Typography, Alert, Tabs, Space, message, Modal, Input } from 'antd';
+import { CgExport } from 'react-icons/cg';
+import { export_url } from '../../configs/app-global';
+import { useTranslation } from 'react-i18next';
+
+
+
+
 
 // Custom Styles (same as IndexPage)
 const componentStyles = `
@@ -92,7 +99,11 @@ const { TabPane } = Tabs;
 const { Search } = Input;
 
 const DeliverymanFinance = () => {
+    const { t } = useTranslation();
+  
   const [financeData, setFinanceData] = useState([]);
+    const [downloading, setDownloading] = useState(false);
+  
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -206,9 +217,63 @@ const DeliverymanFinance = () => {
       message.error('Invalid deliveryman ID or week range');
       return;
     }
-    await DeliverymanFinanceService.getDeliveryManDetails(deliverymanId , weekRange);
+    await DeliverymanFinanceService.getDeliveryManDetails(deliverymanId, weekRange);
     navigate(`/deliveryman-details/${deliverymanId}/${encodeURIComponent(weekRange)}`);
   };
+
+  // const handleExportExcel = async (record) => {
+  //     if (!record.deliveryMan?.id) {
+  //       message.error('Invalid record data for export');
+  //       return;
+  //     }
+  
+  //     const key = `export-${record.deliveryMan?.id}`;
+  //     message.loading({ content: 'Preparing export...', key });
+  
+  //     try {
+  //       await DeliverymanFinanceService.exportToExcel(record.deliveryMan?.id);
+  //       message.success({
+  //         content: 'Export downloaded successfully!',
+  //         key,
+  //         duration: 2
+  //       });
+  //     } catch (err) {
+  //       console.error('Export error:', err);
+  //       message.error({
+  //         content: `Export failed: ${err.message}`,
+  //         key,
+  //         duration: 4
+  //       });
+  //     }
+  //   };
+
+
+
+const excelExport = async (record) => {
+  setDownloading(true);
+  const params = {
+    deliveryMan_id: record.deliveryMan?.id,
+  };
+  try {
+    const res = await DeliverymanFinanceService.export(params);
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'shops.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (error) {
+    console.error('Error exporting Excel:', error);
+    alert('Failed to export Excel: ' + (error.message || 'Unknown error'));
+  } finally {
+    setDownloading(false);
+  }
+};
+
+
+
+    
 
   const handleSearch = (value) => {
     setSearchText(value);
@@ -284,6 +349,10 @@ const DeliverymanFinance = () => {
               >
                 View
               </Button>
+                <Button loading={downloading} onClick={excelExport}>
+                          <CgExport className='mr-2' />
+                          {t('export')}
+                        </Button>
               <Button
                 className="btn-paid"
                 icon={<CheckCircleOutlined />}
@@ -331,22 +400,22 @@ const DeliverymanFinance = () => {
       <style>{componentStyles}</style>
       <div className="index-container">
         <div className="finance-card">
-          <div className = "top-header">
+          <div className="top-header">
             <Title level={2} style={{ marginBottom: '24px' }}>
-            Deliveryman Finance Overview
-          </Title>
-          <div className="search-container">
-            <Search
-              placeholder="Search deliveryman"
-              allowClear
-              enterButton={<SearchOutlined />}
-              size="large"
-              className="search-input"
-              onSearch={handleSearch}
-              onChange={(e) => setSearchText(e.target.value)}
-              value={searchText}
-            />
-          </div>
+              Deliveryman Finance Overview
+            </Title>
+            <div className="search-container">
+              <Search
+                placeholder="Search deliveryman"
+                allowClear
+                enterButton={<SearchOutlined />}
+                size="large"
+                className="search-input"
+                onSearch={handleSearch}
+                onChange={(e) => setSearchText(e.target.value)}
+                value={searchText}
+              />
+            </div>
           </div>
           <Tabs activeKey={activeTab} onChange={handleTabChange}>
             <TabPane tab="Unpaid" key="unpaid" />

@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Spin, Alert, Button } from 'antd';
-import {
-  DownloadOutlined,
-  PhoneOutlined,
-  MailOutlined,
-} from '@ant-design/icons';
+import { Typography, Spin, Alert, Button, message } from 'antd';
+import { DownloadOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
 import download from 'downloadjs';
 import SellerFinanceService from '../../services/seller-finance';
 import getInvoiceLogo from '../../helpers/getInvoiceLogo';
@@ -85,16 +81,12 @@ const ShopDetails = () => {
         console.log('Orders structure:', response.orders);
         console.log('Is orders an array?', Array.isArray(response.orders));
         console.log('Normalized orders:', normalizeOrders(response.orders));
-        if (
-          response &&
-          response.shop &&
-          response.orders &&
-          response.total_sales !== undefined &&
-          response.total_commission !== undefined &&
-          response.sum_of_order_discounts !== undefined &&
-          response.total_charges_and_discounts !== undefined &&
-          response.net_amount_payable !== undefined
-        ) {
+        if (response && response.shop && response.orders && 
+            response.total_sales !== undefined && 
+            response.total_commission !== undefined && 
+            response.sum_of_order_discounts !== undefined && 
+            response.total_charges_and_discounts !== undefined && 
+            response.net_amount_payable !== undefined) {
           setShopData(response);
         } else {
           console.error('API response is missing expected fields:', {
@@ -102,10 +94,8 @@ const ShopDetails = () => {
             hasOrders: !!response.orders,
             hasTotalSales: response.total_sales !== undefined,
             hasTotalCommission: response.total_commission !== undefined,
-            hasSumOfOrderDiscounts:
-              response.sum_of_order_discounts !== undefined,
-            hasTotalChargesAndDiscounts:
-              response.total_charges_and_discounts !== undefined,
+            hasSumOfOrderDiscounts: response.sum_of_order_discounts !== undefined,
+            hasTotalChargesAndDiscounts: response.total_charges_and_discounts !== undefined,
             hasNetAmountPayable: response.net_amount_payable !== undefined,
           });
           throw new Error('API response is missing expected data fields');

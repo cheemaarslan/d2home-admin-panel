@@ -1,4 +1,6 @@
 import request from './request';
+import requestWithoutTimeout from './requestWithoutTimeout';
+
 
 
 const DeliverymanFinanceService = {
@@ -39,44 +41,51 @@ const DeliverymanFinanceService = {
     }
   },
 
-getDeliveryManDetails: async (id, week_range ) => {
+  getDeliveryManDetails: async (id, week_range) => {
     if (!id || !week_range) {
-        throw new Error('Deliveryman ID, week range are required');
+      throw new Error('Deliveryman ID, week range are required');
     }
 
     console.log('My payload: ', { week_range });
     console.log('Id: ', id);
 
     try {
-        const response = await request.get(
-            `/dashboard/admin/deliveryman-finance/deliveryman-details/${id}`,
-            { params: { week_range } }
-        );
-        return response.data;
+      const response = await request.get(
+        `/dashboard/admin/deliveryman-finance/deliveryman-details/${id}`,
+        { params: { week_range } }
+      );
+      return response.data;
     } catch (error) {
-        console.error(`Error fetching details for delivery man ${id}:`, error);
-        throw error;
+      console.error(`Error fetching details for delivery man ${id}:`, error);
+      throw error;
     }
-},
+  },
 
 
 
-downloadInvoice: async (invoiceId, params = {}, week_range) => {
-  if (!invoiceId) {
-    throw new Error("Invoice ID is required");
-  }
-  return request.get(
-    `/dashboard/admin/deliveryman-finance/download-invoice/${invoiceId}`,
-    {
-      params: {
-        ...params,
-        week_range,
-      },
-      responseType: 'blob',
-      timeout: 32000,
+  downloadInvoice: async (invoiceId, params = {}, week_range) => {
+    if (!invoiceId) {
+      throw new Error("Invoice ID is required");
     }
-  );
-},
+    return request.get(
+      `/dashboard/admin/deliveryman-finance/download-invoice/${invoiceId}`,
+      {
+        params: {
+          ...params,
+          week_range,
+        },
+        responseType: 'blob',
+        timeout: 32000,
+      }
+    );
+  },
+
+  export: (params) =>
+  requestWithoutTimeout.get(`/dashboard/admin/deliveryman-finance/download-excel`, {
+    params,
+    responseType: 'blob',
+  }),
+
 
   updateStatus: async (deliverymanId, payload) => {
     if (!deliverymanId || !payload.status || !payload.week_range) {
