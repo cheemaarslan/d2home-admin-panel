@@ -110,14 +110,15 @@ const SellerFinanceService = {
       throw new Error(errorMessage);
     }
   },
-  exportToExcel: async (recordId) => {
-    if (!recordId || isNaN(parseInt(recordId))) {
-      throw new Error('Valid Record ID is required');
+  exportToExcel: async (filteredData) => {
+    console.log(`filteredData : ${filteredData}`);
+    if (!filteredData) {
+      throw new Error('Filtered data is required');
     }
     try {
       const response = await request.post(
         `/dashboard/admin/seller-finance/download-excel`,
-        { record_id: recordId, lang: 'en' },
+        { filter_data: filteredData, lang: 'en' },
         {
           responseType: 'blob' // This is crucial for file downloads
         }

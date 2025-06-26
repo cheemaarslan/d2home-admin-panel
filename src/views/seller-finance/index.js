@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SellerFinanceService from '../../services/seller-finance';
-import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined, ExportOutlined } from '@ant-design/icons';
 import { Table, Button, Spin, Typography, Alert, Tabs, Space, message, Input } from 'antd';
-
 
 // Custom Styles
 const componentStyles = `
@@ -31,12 +30,6 @@ const componentStyles = `
 
   .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
     color: #1890ff !important;
-  }
-    .top-header{
-  display : flex;
-    align-items : center;
-    justify-content : space-between;
-    width : 100 %;
   }
 
   .ant-tabs-ink-bar {
@@ -85,15 +78,30 @@ const componentStyles = `
   .search-input {
     width: 300px;
   }
-    .ant-btn-default:not(:disabled):not(.ant-btn-dangerous) {
-  color: #1d6f42;
-  border-color: #1d6f42;
-}
 
-.ant-btn-default:not(:disabled):not(.ant-btn-dangerous):hover {
-  color: #1a6139;
-  border-color: #1a6139;
-}
+  .ant-btn-default:not(:disabled):not(.ant-btn-dangerous) {
+    color: #1d6f42;
+    border-color: #1d6f42;
+  }
+
+  .ant-btn-default:not(:disabled):not(.ant-btn-dangerous):hover {
+    color: #1a6139;
+    border-color: #1a6139;
+  }
+
+  .top-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .export-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 `;
 
 const { Title } = Typography;
@@ -127,7 +135,7 @@ const IndexPage = () => {
 
       const data = Array.isArray(response.data) ? response.data : [];
       setFinanceData(data);
-      setFilteredData(data); // Initialize filtered data
+      // Do not setFilteredData here; let the search effect handle it
       setPagination(prev => ({
         ...prev,
         total: response.meta?.total ?? data.length ?? 0
@@ -135,13 +143,12 @@ const IndexPage = () => {
     } catch (err) {
       setError(err.message);
       setFinanceData([]);
-      setFilteredData([]);
+      // Do not reset filteredData here; let the search effect handle it
     } finally {
       setLoading(false);
     }
   }, [activeTab, pagination.page, pagination.perPage]);
 
-  // Filter data based on search text
   useEffect(() => {
     if (searchText) {
       const filtered = financeData.filter((record) => {
@@ -174,18 +181,14 @@ const IndexPage = () => {
       message.error({ content: `Failed to update: ${err.message}`, key, duration: 3 });
     }
   };
-  
-  const handleExportExcel = async (record) => {
-    if (!record?.record_id) {
-      message.error('Invalid record data for export');
-      return;
-    }
 
-    const key = `export-${record.shop.uuid}-${record.record_id}`;
+  const handleExportExcel = async () => {
+    const key = 'export-all';
     message.loading({ content: 'Preparing export...', key });
 
     try {
-      await SellerFinanceService.exportToExcel(record.record_id);
+      // Ensure filteredData is passed, default to empty array if undefined
+      await SellerFinanceService.exportToExcel(filteredData || []);
       message.success({
         content: 'Export downloaded successfully!',
         key,
@@ -218,7 +221,7 @@ const IndexPage = () => {
 
   const handleTabChange = (key) => {
     setActiveTab(key);
-    setSearchText(''); // Reset search when changing tabs
+    setSearchText('');
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -232,7 +235,7 @@ const IndexPage = () => {
 
   const handleSearch = (value) => {
     setSearchText(value);
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page when searching
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const columns = [
@@ -303,16 +306,6 @@ const IndexPage = () => {
                 View
               </Button>
               <Button
-                key="excel"
-                type="default"
-                icon={<FileExcelOutlined />}
-                onClick={() => handleExportExcel(record)}
-                disabled={!record.record_id || isNaN(parseInt(record.record_id))}
-                style={{ color: '#1d6f42', borderColor: '#1d6f42' }}
-              >
-                Excel
-              </Button>
-              <Button
                 className="btn-paid"
                 icon={<CheckCircleOutlined />}
                 onClick={() => handleMarkAsPaid(record)}
@@ -356,8 +349,12 @@ const IndexPage = () => {
       <style>{componentStyles}</style>
       <div className="index-container">
         <div className="finance-card">
-          <div className='top-header'>
-            <Title level={2} style={{ marginBottom: '24px' }}>Weekly Finance Overview</Title>
+          <div className="top-header">
+            <div className="export-container">
+              <Button icon={<ExportOutlined />} onClick={handleExportExcel}>
+                Export
+              </Button>
+            </div>
             <div className="search-container">
               <Search
                 placeholder="Search seller"
@@ -372,12 +369,13 @@ const IndexPage = () => {
             </div>
           </div>
 
+          <Title level={2} style={{ marginBottom: '24px' }}>Weekly Finance Overview</Title>
+
           <Tabs activeKey={activeTab} onChange={handleTabChange}>
             <TabPane tab="Unpaid" key="unpaid" />
             <TabPane tab="Paid" key="paid" />
             <TabPane tab="Canceled" key="canceled" />
           </Tabs>
-
 
           {loading ? (
             <Spin size="large" style={{ display: 'flex', justifyContent: 'center', marginTop: 50 }} />
@@ -394,7 +392,7 @@ const IndexPage = () => {
             <Table
               columns={columns}
               dataSource={filteredData}
-              rowKey={(record) => `${record.shop?.id}-${record.record_id}`}
+              rowKey={(record) => record.record_id}
               pagination={{
                 current: pagination.page,
                 pageSize: pagination.perPage,

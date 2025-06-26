@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DeliverymanFinanceService from '../../services/deliveryman-finance';
-import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined, ExportOutlined } from '@ant-design/icons';
 import { Table, Button, Spin, Typography, Alert, Tabs, Space, message, Modal, Input } from 'antd';
 
-
-// Custom Styles (same as IndexPage)
+// Custom Styles
 const componentStyles = `
   .index-container {
     padding: 24px;
@@ -20,11 +19,12 @@ const componentStyles = `
     border: 1px solid #e8e8e8;
   }
 
-  .top-header{
-  display : flex;
-    align-items : center;
-    justify-content : space-between;
-    width : 100 %;
+  .top-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 16px;
   }
 
   .ant-tabs-nav {
@@ -86,6 +86,22 @@ const componentStyles = `
   .search-input {
     width: 300px;
   }
+
+  .export-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ant-btn-default:not(:disabled):not(.ant-btn-dangerous) {
+    color: #1d6f42;
+    border-color: #1d6f42;
+  }
+
+  .ant-btn-default:not(:disabled):not(.ant-btn-dangerous):hover {
+    color: #1a6139;
+    border-color: #1a6139;
+  }
 `;
 
 const { Title } = Typography;
@@ -124,7 +140,7 @@ const DeliverymanFinance = () => {
       });
 
       setFinanceData(filteredData);
-      setFilteredData(filteredData); // Initialize filteredData with all data
+      setFilteredData(filteredData);
       setPagination((prev) => ({
         ...prev,
         total: response.meta?.total ?? filteredData.length ?? 0,
@@ -143,7 +159,6 @@ const DeliverymanFinance = () => {
     fetchFinanceData();
   }, [fetchFinanceData]);
 
-  // Filter data based on search text
   useEffect(() => {
     if (searchText) {
       const filtered = financeData.filter((record) => {
@@ -194,9 +209,31 @@ const DeliverymanFinance = () => {
     });
   };
 
+  const handleExportExcel = async () => {
+    const key = 'export-all';
+    message.loading({ content: 'Preparing export...', key });
+    console.log(filteredData);
+    try {
+      // Export all filtered data
+      await DeliverymanFinanceService.exportToExcel(filteredData);
+      message.success({
+        content: 'Export downloaded successfully!',
+        key,
+        duration: 2
+      });
+    } catch (err) {
+      console.error('Export error:', err);
+      message.error({
+        content: `Export failed: ${err.message}`,
+        key,
+        duration: 4
+      });
+    }
+  };
+
   const handleTabChange = (key) => {
     setActiveTab(key);
-    setSearchText(''); // Reset search when changing tabs
+    setSearchText('');
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
@@ -211,35 +248,9 @@ const DeliverymanFinance = () => {
     navigate(`/deliveryman-details/${deliverymanId}/${encodeURIComponent(weekRange)}`);
   };
 
-  const handleExportExcel = async (record) => {
-      if (!record.deliveryMan?.id) {
-        message.error('Invalid record data for export');
-        return;
-      }
-  
-      const key = `export-${record.deliveryMan?.id}`;
-      message.loading({ content: 'Preparing export...', key });
-  
-      try {
-        await DeliverymanFinanceService.exportToExcel(record.deliveryMan?.id);
-        message.success({
-          content: 'Export downloaded successfully!',
-          key,
-          duration: 2
-        });
-      } catch (err) {
-        console.error('Export error:', err);
-        message.error({
-          content: `Export failed: ${err.message}`,
-          key,
-          duration: 4
-        });
-      }
-    };
-
   const handleSearch = (value) => {
     setSearchText(value);
-    setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page when searching
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const columns = [
@@ -312,16 +323,6 @@ const DeliverymanFinance = () => {
                 View
               </Button>
               <Button
-                key="excel"
-                type="default"
-                icon={<FileExcelOutlined />}
-                onClick={() => handleExportExcel(record)}
-                disabled={!record.deliveryMan?.id || !record.weekly_reports?.[0]?.week_range}
-                style={{ color: '#1d6f42', borderColor: '#1d6f42' }}
-              >
-                Excel
-              </Button>
-              <Button
                 className="btn-paid"
                 icon={<CheckCircleOutlined />}
                 onClick={() => handleMarkAsPaid(record)}
@@ -369,9 +370,11 @@ const DeliverymanFinance = () => {
       <div className="index-container">
         <div className="finance-card">
           <div className="top-header">
-            <Title level={2} style={{ marginBottom: '24px' }}>
-              Deliveryman Finance Overview
-            </Title>
+            <div className="export-container">
+              <Button icon={<ExportOutlined />} onClick={handleExportExcel} style={{ color: '#1d6f42', borderColor: '#1d6f42' }}>
+                Export
+              </Button>
+            </div>
             <div className="search-container">
               <Search
                 placeholder="Search deliveryman"
@@ -385,6 +388,9 @@ const DeliverymanFinance = () => {
               />
             </div>
           </div>
+          <Title level={2} style={{ marginBottom: '24px' }}>
+            Deliveryman Finance Overview
+          </Title>
           <Tabs activeKey={activeTab} onChange={handleTabChange}>
             <TabPane tab="Unpaid" key="unpaid" />
             <TabPane tab="Paid" key="paid" />

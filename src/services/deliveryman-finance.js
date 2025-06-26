@@ -1,4 +1,5 @@
 import request from './request';
+import { message } from 'antd';
 
 
 const DeliverymanFinanceService = {
@@ -78,72 +79,87 @@ const DeliverymanFinanceService = {
     );
   },
 
-  exportToExcel: async (deliverymanIdid) => {
-    if (!deliverymanIdid || isNaN(parseInt(deliverymanIdid))) {
-      throw new Error('Valid Record ID is required');
-    }
-    try {
-      const response = await request.post(
-        `/dashboard/admin/deliveryman-finance/download-excel`,
-        { deliverymanIdid: deliverymanIdid, lang: 'en' },
-        {
-          responseType: 'blob' // This is crucial for file downloads
-        }
-      );
+  exportToExcel: async (filteredData) => {
+  if (!filteredData) {
+    throw new Error('filtered Data is required');
+  }
+  const key = 'export-all';
+  try {
+    message.loading({ content: 'Preparing export...', key });
 
-      // Create a safe filename fallback
-      const timestamp = new Date().toISOString().slice(0, 10);
-      let filename = `shop_invoice_${timestamp}.xlsx`;
+    const response = await request.post(
+      `/dashboard/admin/deliveryman-finance/download-excel`,
+      { filteredData, lang: 'en' },
+      {
+        responseType: 'blob' // This is crucial for file downloads
+      }
+    );
 
-      // Try to get filename from headers (more robust approach)
-      if (response.headers) {
-        const disposition = response.headers['content-disposition'] ||
-          response.headers.get('content-disposition');
-        if (disposition) {
-          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-          if (matches && matches[1]) {
-            filename = matches[1].replace(/['"]/g, '');
-          }
+    // Create a safe filename fallback
+    const timestamp = new Date().toISOString().slice(0, 10);
+    let filename = `deliveryman_finance_${filteredData}_${timestamp}.xlsx`;
+
+    // Try to get filename from headers (more robust approach)
+    if (response.headers) {
+      const disposition = response.headers['content-disposition'] ||
+        response.headers.get('content-disposition');
+      if (disposition) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+        if (matches && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '');
         }
       }
-
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        link.remove();
-      }, 100);
-
-      return true;
-    } catch (error) {
-      console.error('Export error:', error);
-      let errorMessage = 'Failed to download Excel file';
-
-      // Try to parse error message from blob if response was blob
-      if (error.response?.data instanceof Blob) {
-        try {
-          const text = await error.response.data.text();
-          const result = JSON.parse(text);
-          errorMessage = result.message || errorMessage;
-        } catch (e) {
-          console.error('Error parsing error blob:', e);
-        }
-      } else {
-        errorMessage = error.response?.data?.message ||
-          error.message ||
-          errorMessage;
-      }
-
-      throw new Error(errorMessage);
     }
-  },
+
+    // Create download link
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      link.remove();
+    }, 100);
+
+    message.success({
+      content: 'Export downloaded successfully!',
+      key,
+      duration: 2
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Export error:', error);
+    let errorMessage = 'Failed to download Excel file';
+
+    // Try to parse error message from blob if response was blob
+    if (error.response?.data instanceof Blob) {
+      try {
+        const text = await error.response.data.text();
+        const result = JSON.parse(text);
+        errorMessage = result.message || errorMessage;
+      } catch (e) {
+        console.error('Error parsing error blob:', e);
+      }
+    } else {
+      errorMessage = error.response?.data?.message ||
+        error.message ||
+        errorMessage;
+    }
+
+    message.error({
+      content: `Export failed: ${errorMessage}`,
+      key,
+      duration: 4
+    });
+
+    throw new Error(errorMessage);
+  }
+},
 
   updateStatus: async (deliverymanId, payload) => {
     if (!deliverymanId || !payload.status || !payload.week_range) {
