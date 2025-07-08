@@ -108,6 +108,15 @@ const Setting = ({ setFavicon, favicon, setLogo, logo }) => {
             <Select options={Time} />
           </Form.Item>
         </Col>
+        <Col span={12}>
+          <Form.Item
+            label={t('Welcome Coupon')}
+            name='welcome_coupon'
+          >
+           
+            <Input />
+          </Form.Item>
+        </Col>
         {/*<Col span={12}>*/}
         {/*  <Form.Item*/}
         {/*    label={t('qrcode.base.url')}*/}

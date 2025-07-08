@@ -30,7 +30,10 @@ export const fetchProducts = createAsyncThunk(
   (params = {}) => {
     return productService
       .getAll({ ...initialState.params, ...params })
-      .then((res) => res);
+      .then((res) => {
+        console.log('Fetched products data:', res.data);
+        return res;
+      });
   },
 );
 
@@ -69,6 +72,7 @@ const productSlice = createSlice({
         name: item.translation ? item.translation.title : 'no name',
         active: item.active,
         img: item.img,
+        is_bogo: item.is_bogo,
         category_name: item.category?.translation
           ? item.category.translation.title
           : 'no name',
@@ -101,6 +105,7 @@ const productSlice = createSlice({
           : 'no name',
         active: item.active,
         img: item?.img,
+        is_bogo: item.is_bogo,
         category_name: item.product?.category?.translation
           ? item.product?.category.translation.title
           : 'no name',
@@ -132,6 +137,7 @@ const productSlice = createSlice({
         name: item?.translation ? item?.translation.title : 'no name',
         active: item.active,
         img: item?.img,
+        is_bogo: item.is_bogo,
         category_name: item?.category?.translation
           ? item?.category?.translation?.title
           : 'no name',
@@ -162,6 +168,12 @@ const productSlice = createSlice({
         }
         return stock;
       });
+    },
+    updateProductIsBogoStatus: (state, action) => {
+      const { uuid, is_bogo } = action.payload;
+      state.products = state.products.map(product =>
+        product.uuid === uuid ? { ...product, is_bogo } : product
+      );
     },
     resetFormStocks(state) {
       state.form.stocks = initialState.form.stocks;
@@ -207,6 +219,7 @@ export const {
   deleteFilter,
   deleteStockFromStocks,
   resetDeletedIds,
+  updateProductIsBogoStatus,
 } = productSlice.actions;
 
 export default productSlice.reducer;

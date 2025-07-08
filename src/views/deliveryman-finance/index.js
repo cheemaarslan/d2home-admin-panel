@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DeliverymanFinanceService from '../../services/deliveryman-finance';
-import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined, ExportOutlined } from '@ant-design/icons';
 import { Table, Button, Spin, Typography, Alert, Tabs, Space, message, Modal, Input } from 'antd';
 import { CgExport } from 'react-icons/cg';
 import { export_url } from '../../configs/app-global';
+import productService from '../../services/product';
 import { useTranslation } from 'react-i18next';
 
-
-
-
-
-// Custom Styles (same as IndexPage)
+// Custom Styles
 const componentStyles = `
   .index-container {
     padding: 24px;
@@ -26,11 +23,14 @@ const componentStyles = `
     border: 1px solid #e8e8e8;
   }
 
-  .top-header{
-  display : flex;
-    align-items : center;
-    justify-content : space-between;
-    width : 100 %;
+  .top-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 16px;
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
 
   .ant-tabs-nav {
@@ -84,13 +84,28 @@ const componentStyles = `
   }
 
   .search-container {
-    margin-bottom: 20px;
     display: flex;
     justify-content: flex-end;
   }
 
   .search-input {
     width: 300px;
+  }
+
+  .export-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ant-btn-default:not(:disabled):not(.ant-btn-dangerous) {
+    color: #1d6f42;
+    border-color: #1d6f42;
+  }
+
+  .ant-btn-default:not(:disabled):not(.ant-btn-dangerous):hover {
+    color: #1a6139;
+    border-color: #1a6139;
   }
 `;
 
@@ -99,16 +114,14 @@ const { TabPane } = Tabs;
 const { Search } = Input;
 
 const DeliverymanFinance = () => {
-    const { t } = useTranslation();
-  
+  const { t } = useTranslation();
   const [financeData, setFinanceData] = useState([]);
-    const [downloading, setDownloading] = useState(false);
-  
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('unpaid');
   const [searchText, setSearchText] = useState('');
+  const [downloading, setDownloading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     perPage: 10,
@@ -128,13 +141,24 @@ const DeliverymanFinance = () => {
       });
 
       const data = Array.isArray(response.data) ? response.data : [];
-      const filteredData = data.filter((record) => {
-        const recordStatus = (record.status || record.weekly_reports?.[0]?.status || 'unpaid').toLowerCase();
+
+      // Flatten the data structure
+      const flattenedData = data.flatMap(record => {
+        return record.weekly_reports.map(report => ({
+          ...record,
+          weekly_reports: [report], // Keep as array for compatibility
+          status: report.status, // Make status accessible at top level
+        }));
+      });
+
+      // Now filter based on status
+      const filteredData = flattenedData.filter(record => {
+        const recordStatus = (record.status || 'unpaid').toLowerCase();
         return recordStatus === activeTab.toLowerCase();
       });
 
       setFinanceData(filteredData);
-      setFilteredData(filteredData); // Initialize filteredData with all data
+      setFilteredData(filteredData);
       setPagination((prev) => ({
         ...prev,
         total: response.meta?.total ?? filteredData.length ?? 0,
@@ -153,7 +177,6 @@ const DeliverymanFinance = () => {
     fetchFinanceData();
   }, [fetchFinanceData]);
 
-  // Filter data based on search text
   useEffect(() => {
     if (searchText) {
       const filtered = financeData.filter((record) => {
@@ -204,9 +227,24 @@ const DeliverymanFinance = () => {
     });
   };
 
+
+  const excelExport = () => {
+    setDownloading(true);
+    const params = {
+      filteredData: filteredData,
+    };
+    productService
+      .exportDeliveryMan(params)
+      .then((res) => {
+        const body = export_url + res.data.file_name;
+        window.location.href = body;
+      })
+      .finally(() => setDownloading(false));
+  };
+
   const handleTabChange = (key) => {
     setActiveTab(key);
-    setSearchText(''); // Reset search when changing tabs
+    setSearchText('');
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
@@ -221,63 +259,9 @@ const DeliverymanFinance = () => {
     navigate(`/deliveryman-details/${deliverymanId}/${encodeURIComponent(weekRange)}`);
   };
 
-  // const handleExportExcel = async (record) => {
-  //     if (!record.deliveryMan?.id) {
-  //       message.error('Invalid record data for export');
-  //       return;
-  //     }
-  
-  //     const key = `export-${record.deliveryMan?.id}`;
-  //     message.loading({ content: 'Preparing export...', key });
-  
-  //     try {
-  //       await DeliverymanFinanceService.exportToExcel(record.deliveryMan?.id);
-  //       message.success({
-  //         content: 'Export downloaded successfully!',
-  //         key,
-  //         duration: 2
-  //       });
-  //     } catch (err) {
-  //       console.error('Export error:', err);
-  //       message.error({
-  //         content: `Export failed: ${err.message}`,
-  //         key,
-  //         duration: 4
-  //       });
-  //     }
-  //   };
-
-
-
-const excelExport = async (record) => {
-  setDownloading(true);
-  const params = {
-    deliveryMan_id: record.deliveryMan?.id,
-  };
-  try {
-    const res = await DeliverymanFinanceService.export(params);
-    const url = window.URL.createObjectURL(new Blob([res.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'shops.xlsx');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  } catch (error) {
-    console.error('Error exporting Excel:', error);
-    alert('Failed to export Excel: ' + (error.message || 'Unknown error'));
-  } finally {
-    setDownloading(false);
-  }
-};
-
-
-
-    
-
   const handleSearch = (value) => {
     setSearchText(value);
-    setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page when searching
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const columns = [
@@ -349,10 +333,6 @@ const excelExport = async (record) => {
               >
                 View
               </Button>
-                <Button loading={downloading} onClick={excelExport}>
-                          <CgExport className='mr-2' />
-                          {t('export')}
-                        </Button>
               <Button
                 className="btn-paid"
                 icon={<CheckCircleOutlined />}
@@ -401,9 +381,12 @@ const excelExport = async (record) => {
       <div className="index-container">
         <div className="finance-card">
           <div className="top-header">
-            <Title level={2} style={{ marginBottom: '24px' }}>
-              Deliveryman Finance Overview
-            </Title>
+            <div className="export-container">
+              <Button loading={downloading} onClick={excelExport}>
+                <CgExport className='mr-2' />
+                {t('export')}
+              </Button>
+            </div>
             <div className="search-container">
               <Search
                 placeholder="Search deliveryman"
@@ -417,6 +400,9 @@ const excelExport = async (record) => {
               />
             </div>
           </div>
+          <Title level={2} style={{ marginBottom: '24px' }}>
+            Deliveryman Finance Overview
+          </Title>
           <Tabs activeKey={activeTab} onChange={handleTabChange}>
             <TabPane tab="Unpaid" key="unpaid" />
             <TabPane tab="Paid" key="paid" />

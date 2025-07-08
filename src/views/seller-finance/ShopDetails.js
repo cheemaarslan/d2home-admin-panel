@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Typography, Spin, Alert, Button, message } from 'antd';
-import { DownloadOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
+import { DownloadOutlined, PhoneOutlined, MailOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import download from 'downloadjs';
 import SellerFinanceService from '../../services/seller-finance';
 import getInvoiceLogo from '../../helpers/getInvoiceLogo';
@@ -298,6 +298,18 @@ const ShopDetails = () => {
                 D2Home
               </span>
               <div>
+                <Text
+                  style={{ color: 'white', display: 'block', fontSize: '14px' }}
+                >
+                  <EnvironmentOutlined style={{ marginRight: 8, fontSize: 14 }} />{' '}
+                  {companyDetails.addressLine1 || 'N/A'}
+                </Text>
+                <Text
+                  style={{ color: 'white', display: 'block', fontSize: '14px' }}
+                >
+                  <EnvironmentOutlined style={{ marginRight: 8, fontSize: 14 }} />{' '}
+                  {companyDetails.addressLine2 || 'N/A'}
+                </Text>
                 <Text
                   style={{ color: 'white', display: 'block', fontSize: '14px' }}
                 >

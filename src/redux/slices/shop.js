@@ -58,7 +58,7 @@ const shopSlice = createSlice({
           status: item.status,
           deleted_at: item.deleted_at,
           verify: item.verify,
-          pos_access: item.pos_access, // Use pos_access from API
+          pos_access: item.pos_access, 
         }));
         state.meta = payload.meta;
         state.params.page = payload.meta.current_page;

@@ -48,11 +48,13 @@ const ProductCategories = () => {
 
   const [productDetails, setProductDetails] = useState(null);
   const [active, setActive] = useState(null);
+  const [isBogo, setIsBogo] = useState(null);
   const [text, setText] = useState(null);
   const [restore, setRestore] = useState(null);
   const [id, setId] = useState(null);
   const [loadingBtn, setLoadingBtn] = useState(false);
   const [downloading, setDownloading] = useState(false);
+
   const [columns, setColumns] = useState([
     {
       title: t('id'),
@@ -121,6 +123,7 @@ const ProductCategories = () => {
               setIsModalVisible(true);
               setId(row.uuid);
               setActive(true);
+              setIsBogo(null); // Reset isBogo to avoid conflicts
             }}
             disabled={row?.deleted_at}
             checked={!!active}
@@ -129,10 +132,33 @@ const ProductCategories = () => {
       },
     },
     {
+      title: t('bogo'),
+      dataIndex: 'is_bogo',
+      key: 'is_bogo',
+      width: 100,
+      is_show: true, // Ensure column is shown
+      render: (is_bogo, record) => {
+        console.log('Rendering BOGO for record:', record);
+        return (
+          <Switch
+            checked={is_bogo === 1}
+            onChange={(checked) => {
+              console.log('Switch toggled:', checked, 'Record:', record);
+              setId(record.uuid);
+              setIsBogo(checked);
+              setActive(null); // Reset active to avoid conflicts
+              setIsModalVisible(true);
+            }}
+            disabled={record?.deleted_at}
+          />
+        );
+      },
+    },
+    {
       title: t('status'),
-      is_show: true,
       dataIndex: 'status',
       key: 'status',
+      is_show: true,
       render: (status, row) => (
         <div>
           {status === 'pending' ? (
@@ -172,7 +198,8 @@ const ProductCategories = () => {
                 setIsModalVisible(true);
                 setId([row.id]);
                 setText(true);
-                setActive(false);
+                setActive(null);
+                setIsBogo(null);
               }}
               disabled={row.deleted_at}
             />
@@ -194,53 +221,31 @@ const ProductCategories = () => {
     deleted_at: status === 'deleted_at' ? 'deleted_at' : undefined,
     sort: data?.sort,
     column: data?.column,
-    perPage: data?.perPage,
-    page: data?.page,
+    perPage: data?.perPage || 10,
+    page: data?.page || 1,
   };
 
   useEffect(() => {
-    const params = {
-      ...paramsData,
-      page: 1,
-      perPage: meta?.perPage || 10,
-    };
-    fetch(params);
-    // eslint-disable-next-line
+    console.log('Fetching products with params:', paramsData);
+    dispatch(fetchProducts(paramsData));
   }, [
-    paramsData?.search,
-    paramsData?.brand_id,
-    paramsData?.category_id,
-    paramsData?.shop_id,
-    paramsData?.kitchen_id,
-    paramsData?.sort,
-    paramsData?.status,
+    paramsData.search,
+    paramsData.brand_id,
+    paramsData.category_id,
+    paramsData.shop_id,
+    paramsData.kitchen_id,
+    paramsData.status,
+    paramsData.sort,
+    paramsData.column,
+    dispatch,
   ]);
 
   useDidUpdate(() => {
     if (activeMenu.refetch) {
-      const params = {
-        ...paramsData,
-        page: 1,
-        perPage: meta?.perPage || 10,
-      };
-      fetch(params);
+      dispatch(fetchProducts(paramsData));
+      dispatch(disableRefetch(activeMenu));
     }
-    // eslint-disable-next-line
   }, [activeMenu.refetch]);
-
-  const fetch = (params = {}) => {
-    dispatch(fetchProducts(params));
-    dispatch(disableRefetch(activeMenu));
-  };
-
-  const clearData = () => {
-    dispatch(
-      setMenuData({
-        activeMenu,
-        data: null,
-      }),
-    );
-  };
 
   const goToAddProduct = () => {
     dispatch(
@@ -250,7 +255,7 @@ const ProductCategories = () => {
         name: t('add.product'),
       }),
     );
-    clearData();
+    dispatch(setMenuData({ activeMenu, data: null }));
     navigate(`/product/add`);
   };
 
@@ -262,7 +267,7 @@ const ProductCategories = () => {
         name: t('edit.product'),
       }),
     );
-    clearData();
+    dispatch(setMenuData({ activeMenu, data: null }));
     navigate(`/product/${uuid}`);
   };
 
@@ -274,7 +279,7 @@ const ProductCategories = () => {
         name: t('clone.product'),
       }),
     );
-    clearData();
+    dispatch(setMenuData({ activeMenu, data: null }));
     navigate(`/product-clone/${uuid}`);
   };
 
@@ -306,7 +311,8 @@ const ProductCategories = () => {
         toast.success(t('successfully.deleted'));
         dispatch(fetchProducts(paramsData));
         setText(null);
-        setActive(false);
+        setActive(null);
+        setIsBogo(null);
       })
       .finally(() => setLoadingBtn(false));
   };
@@ -374,23 +380,41 @@ const ProductCategories = () => {
         setIsModalVisible(false);
         dispatch(fetchProducts(paramsData));
         toast.success(t('successfully.updated'));
-        setActive(false);
+        setActive(null);
+        setIsBogo(null);
       })
       .finally(() => setLoadingBtn(false));
+  };
+
+  const handleBogo = async (productId, newStatus) => {
+    console.log('handleBogo called with productId:', productId, 'newStatus:', newStatus);
+    setLoadingBtn(true);
+    try {
+      const response = await productService.setIsBogo(productId, newStatus);
+      console.log('setIsBogo response:', response);
+      setIsBogo(null); // Reset after action
+      setIsModalVisible(false);
+      dispatch(fetchProducts(paramsData));
+      toast.success(t('successfully.updated'));
+    } catch (error) {
+      console.error('Error updating BOGO:', error);
+      toast.error(t('error.updating.bogo'));
+    } finally {
+      setLoadingBtn(false);
+    }
   };
 
   const onChangePagination = (pagination, filter, sorter) => {
     const { pageSize: perPage, current: page } = pagination;
     const { field: column, order } = sorter;
     const sort = formatSortType(order);
-    const params = {
-      ...paramsData,
-      perPage,
-      page,
-      column,
-      sort,
-    };
-    fetch(params);
+    dispatch(
+      setMenuData({
+        activeMenu,
+        data: { ...paramsData, perPage, page, column, sort },
+      }),
+    );
+    dispatch(fetchProducts({ ...paramsData, perPage, page, column, sort }));
   };
 
   const rowSelection = {
@@ -421,7 +445,6 @@ const ProductCategories = () => {
               {t('delete.selected')}
             </DeleteButton>
           )}
-
           {status !== 'deleted_at' ? (
             <DeleteButton size='' onClick={() => setRestore({ delete: true })}>
               {t('delete.all')}
@@ -449,11 +472,7 @@ const ProductCategories = () => {
           className='mt-3'
           activeKey={status || 'all'}
           onChange={(key) => {
-            if (key === 'all') {
-              queryParams.reset('status');
-            } else {
-              queryParams.set('status', key);
-            }
+            queryParams.set('status', key === 'all' ? '' : key);
           }}
           type='card'
         >
@@ -468,12 +487,12 @@ const ProductCategories = () => {
           scroll={{ x: true }}
           rowSelection={rowSelection}
           loading={loading}
-          columns={columns?.filter((item) => item.is_show)}
+          columns={columns.filter((item) => item.is_show)}
           dataSource={products}
           pagination={{
-            pageSize: params?.perPage || 10,
+            pageSize: meta?.perPage || 10,
             page: meta?.current_page || 1,
-            total: meta?.total,
+            total: meta?.total || 0,
             defaultCurrent: meta?.current_page || 1,
             current: meta?.current_page,
           }}
@@ -489,17 +508,26 @@ const ProductCategories = () => {
         />
       )}
       <CustomModal
-        click={active ? handleActive : productDelete}
+        click={
+          isBogo !== null
+            ? () => handleBogo(id, isBogo)
+            : active
+              ? handleActive
+              : productDelete
+        }
         text={
-          active
-            ? t('set.active.product')
-            : text
-              ? t('delete')
-              : t('all.delete')
+          isBogo !== null
+            ? t('Enable/Disable BOGO')
+            : active
+              ? t('set.active.product')
+              : text
+                ? t('delete')
+                : t('all.delete')
         }
         loading={loadingBtn}
-        setText={setId}
+        setText={setText} // Fix: Use setText for text state
         setActive={setActive}
+        setIsBogo={setIsBogo}
       />
       {restore && (
         <ResultModal
@@ -509,8 +537,9 @@ const ProductCategories = () => {
           text={restore.restore ? t('restore.modal.text') : t('read.carefully')}
           subTitle={restore.restore ? '' : t('confirm.deletion')}
           loading={loadingBtn}
-          setText={setId}
+          setText={setText}
           setActive={setActive}
+          setIsBogo={setIsBogo}
         />
       )}
     </React.Fragment>

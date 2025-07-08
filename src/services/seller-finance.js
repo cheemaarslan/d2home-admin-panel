@@ -110,74 +110,37 @@ const SellerFinanceService = {
       throw new Error(errorMessage);
     }
   },
-
-exportToExcel: async (recordId) => {
-  if (!recordId || isNaN(Number(recordId))) {
-    throw new Error('Valid Record ID is required');
-  }
+ exportToExcel: async (filteredData) => {
   try {
+    if (!filteredData) {
+      throw new Error('Filtered data is required');
+    }
+
     const response = await request.post(
-      '/dashboard/admin/seller-finance/download-excel',
-      { record_id: recordId, lang: 'en' },
+      `/dashboard/admin/seller-finance/download-excel`,
+      { filter_data: filteredData, lang: 'en' },
       {
-        headers: { 'Content-Type': 'application/json' },
         responseType: 'blob',
       }
     );
 
-    // Check response status
-    if (response.status !== 200) {
-      throw new Error('Server returned an error status: ' + response.status);
-    }
+    // Create a Blob from the response
+    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-    // Verify content type
-    const contentType = response.headers?.['content-type'] || '';
-    if (!contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
-      const text = await response.data.text();
-      console.error('Unexpected response:', text);
-      throw new Error(`Server did not return an Excel file: ${text}`);
-    }
-
-    // Determine filename
-    let filename = `shop_invoice_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    const disposition = response.headers?.['content-disposition'];
-    if (disposition) {
-      const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-      if (match && match[1]) filename = match[1].replace(/['"]/g, '');
-    }
-
-    // Download file
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    // Create a link element to trigger download
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
+
     link.href = url;
-    link.download = filename;
+    link.setAttribute('download', 'shop_invoices.xlsx'); // Optional: dynamic filename
     document.body.appendChild(link);
     link.click();
+
+    // Cleanup
     link.remove();
-    setTimeout(() => window.URL.revokeObjectURL(url), 100);
-
-    return true;
+    window.URL.revokeObjectURL(url);
   } catch (error) {
-    let errorMessage = 'Failed to download Excel file';
-    
-    // Handle Axios-like errors
-    if (error.response && error.response.data) {
-      if (error.response.data instanceof Blob) {
-        try {
-          const text = await error.response.data.text();
-          errorMessage = JSON.parse(text).message || text || errorMessage;
-        } catch {
-          errorMessage = 'Invalid response data';
-        }
-      } else {
-        errorMessage = error.response.data.message || errorMessage;
-      }
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
-    console.error('Export error:', errorMessage, error);
-    throw new Error(errorMessage);
+    console.error('Error exporting Excel:', error);
   }
 },
   // /dashboard/admin/seller-finance/download-invoice/${invoiceId}`

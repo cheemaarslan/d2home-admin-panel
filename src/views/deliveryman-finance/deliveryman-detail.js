@@ -411,6 +411,30 @@ const handleDownloadInvoice = async () => {
                 </div>
                 {/* Contact Info */}
                 <div>
+                <Text
+                    style={{
+                      color: 'white',
+                      display: 'block',
+                      fontSize: '14px',
+                    }}
+                  >
+                    <EnvironmentOutlined
+                      style={{ marginRight: 8, fontSize: '14px' }}
+                    />{' '}
+                    {companyDetails.addressLine1}
+                  </Text>
+                  <Text
+                    style={{
+                      color: 'white',
+                      display: 'block',
+                      fontSize: '14px',
+                    }}
+                  >
+                    <EnvironmentOutlined
+                      style={{ marginRight: 8, fontSize: '14px' }}
+                    />{' '}
+                    {companyDetails.addressLine2 || 'N/A'}
+                  </Text>
                   <Text
                     style={{
                       color: 'white',
