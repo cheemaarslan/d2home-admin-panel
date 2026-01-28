@@ -116,6 +116,14 @@ const Setting = ({ setFavicon, favicon, setLogo, logo }) => {
             <Select options={Time} />
           </Form.Item>
         </Col>
+        <Col span={12}>
+          <Form.Item
+            label={t('shop.order.acceptance.timeout')}
+            name='shop_order_acceptance_timeout'
+          >
+            <Select options={Time} />
+          </Form.Item>
+        </Col>
             
         <Col span={12}>
           <Form.Item
