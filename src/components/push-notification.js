@@ -123,10 +123,15 @@ export default function PushNotification({ refetch, onNewOrder }) {
     if (data?.body) {
       const isParcel = data.body?.includes('parcel');
       isParcel ? notifyParcel() : notifyOrder();
-      
-      // Trigger order board refresh when new notification arrives
+
       if (onNewOrder && typeof onNewOrder === 'function') {
-        onNewOrder();
+        const orderStatus = data?.data?.status ||
+          data?.data?.order_status ||
+          'new';
+        const orderId = data?.data?.id;
+
+
+        onNewOrder(orderStatus, orderId);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -134,26 +139,36 @@ export default function PushNotification({ refetch, onNewOrder }) {
 
   useEffect(() => {
     requestForToken();
-  }, []);
 
-  onMessageListener()
-    .then((payload) => {
-   
-      const title = payload?.notification?.title ?? payload?.notification?.body;
-      const body = payload?.notification?.body;
-      
-      setData({
-        title,
-        body,
-        data: payload?.data,
-      });
-      set(
-        payload?.data?.id || title,
-        payload?.data ? { ...payload.data, title: body } : body,
-      );
-      refetch();
-    })
-    .catch((err) => console.log('failed: ', err));
+    let isMounted = true; // Track if component is mounted
+
+    onMessageListener()
+      .then((payload) => {
+        if (!isMounted) return; // Don't update if unmounted
+
+
+        const title = payload?.notification?.title ?? payload?.notification?.body;
+        const body = payload?.notification?.body;
+
+
+        setData({
+          title,
+          body,
+          data: payload?.data,
+        });
+
+        set(
+          payload?.data?.id || title,
+          payload?.data ? { ...payload.data, title: body } : body,
+        );
+        refetch();
+      })
+      .catch((err) => console.log('failed: ', err));
+
+    return () => {
+      isMounted = false; // Cleanup: mark as unmounted
+    };
+  }, [refetch]);
 
   return (
     <div className='notification'>

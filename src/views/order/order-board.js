@@ -21,6 +21,7 @@ import {
   fetchOrders,
   fetchReadyOrders,
   fetchCookingOrders,
+  clearCurrentOrders,
 } from 'redux/slices/orders';
 import {
   fetchRestOrderStatus,
@@ -42,6 +43,7 @@ import moment from 'moment';
 import shopService from 'services/restaurant';
 import Incorporate from './dnd/Incorporate';
 import { batch } from 'react-redux';
+import { store } from 'redux/store';
 import OrderTypeSwitcher from './order-type-switcher';
 import { CgExport } from 'react-icons/cg';
 import { export_url } from 'configs/app-global';
@@ -292,19 +294,142 @@ export default function OrderBoard() {
   }, [activeMenu?.refetch]);
 
   // Expose fetchOrderAllItem to parent component for push notifications
+  // In OrderBoard component, modify the useEffect that exposes refresh functions:
+
+  // Replace the previous useEffect with this:
+
+  // Add this helper function to find which column has the order
+  const findOrderColumn = (orderId) => {
+    const { items } = store.getState().orders;
+
+    for (const [status, orders] of Object.entries(items)) {
+      if (orders.some(order => order.id === parseInt(orderId))) {
+        return status;
+      }
+    }
+    return null;
+  };
+
+  // Update the useEffect:
   useEffect(() => {
-    // Store the refresh function in a way that can be accessed by PushNotification
     if (window) {
       window.refreshOrderBoard = fetchOrderAllItem;
+
+      // Expose column-specific refresh function
+      window.refreshOrderColumn = (status, orderId) => {
+       
+
+        let previousStatus = null;
+
+        if (orderId) {
+          previousStatus = findOrderColumn(orderId);
+        
+
+          if (previousStatus && previousStatus !== status) {
+          
+            dispatch(clearCurrentOrders(previousStatus));
+
+            const oldParams = {
+              delivery_type: type !== 'scheduled' ? type : undefined,
+              delivery_date_from:
+                type === 'scheduled'
+                  ? moment().add(1, 'day').format('YYYY-MM-DD')
+                  : undefined,
+              search: data?.search ? data.search : undefined,
+              user_id: data?.client_id,
+              status: previousStatus,
+              shop_id:
+                activeMenu.data?.shop_id !== null ? activeMenu.data?.shop_id : null,
+              date_from: dateRange?.[0]?.format('YYYY-MM-DD') || undefined,
+              date_to: dateRange?.[1]?.format('YYYY-MM-DD') || undefined,
+            };
+
+            // Refresh the old column
+            switch (previousStatus) {
+              case 'new':
+                dispatch(fetchNewOrders(oldParams));
+                break;
+              case 'accepted':
+                dispatch(fetchAcceptedOrders(oldParams));
+                break;
+              case 'ready':
+                dispatch(fetchReadyOrders(oldParams));
+                break;
+              case 'on_a_way':
+                dispatch(fetchOnAWayOrders(oldParams));
+                break;
+              case 'delivered':
+                dispatch(fetchDeliveredOrders(oldParams));
+                break;
+              case 'canceled':
+                dispatch(fetchCanceledOrders(oldParams));
+                break;
+              case 'cooking':
+                dispatch(fetchCookingOrders(oldParams));
+                break;
+              default:
+                break;
+            }
+          }
+        }
+
+        // Always refresh the new status column
+        if (status) {
+         
+          dispatch(clearCurrentOrders(status));
+
+          const newParams = {
+            delivery_type: type !== 'scheduled' ? type : undefined,
+            delivery_date_from:
+              type === 'scheduled'
+                ? moment().add(1, 'day').format('YYYY-MM-DD')
+                : undefined,
+            search: data?.search ? data.search : undefined,
+            user_id: data?.client_id,
+            status: status,
+            shop_id:
+              activeMenu.data?.shop_id !== null ? activeMenu.data?.shop_id : null,
+            date_from: dateRange?.[0]?.format('YYYY-MM-DD') || undefined,
+            date_to: dateRange?.[1]?.format('YYYY-MM-DD') || undefined,
+          };
+
+          // Refresh the new column
+          switch (status) {
+            case 'new':
+              dispatch(fetchNewOrders(newParams));
+              break;
+            case 'accepted':
+              dispatch(fetchAcceptedOrders(newParams));
+              break;
+            case 'ready':
+              dispatch(fetchReadyOrders(newParams));
+              break;
+            case 'on_a_way':
+              dispatch(fetchOnAWayOrders(newParams));
+              break;
+            case 'delivered':
+              dispatch(fetchDeliveredOrders(newParams));
+              break;
+            case 'canceled':
+              dispatch(fetchCanceledOrders(newParams));
+              break;
+            case 'cooking':
+              dispatch(fetchCookingOrders(newParams));
+              break;
+            default:
+              console.log('Unknown status:', status);
+          }
+        }
+      };
     }
-    
+
     return () => {
-      // Cleanup
       if (window) {
         delete window.refreshOrderBoard;
+        delete window.refreshOrderColumn;
       }
     };
-  }, [fetchOrderAllItem]);
+  }, [fetchOrderAllItem, type, data, dateRange, dispatch, activeMenu.data?.shop_id]);
 
   return (
     <>
