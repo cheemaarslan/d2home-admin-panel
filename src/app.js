@@ -6,7 +6,7 @@ import { ProtectedRoute } from 'context/protected-route';
 import AppLayout from 'layout/app-layout';
 import { WelcomeLayout } from 'layout/welcome-layout';
 import Providers from 'providers';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { WeekRangeProvider } from 'context/WeekRangeContext';
 import {
   Route,
@@ -34,7 +34,7 @@ const App = () => {
 
   const [loading, setLoading] = useState(false);
 
-  const fetchUserSettings = (role) => {
+  const fetchUserSettings = useCallback((role) => {
     switch (role) {
       case 'admin':
         dispatch(fetchSettings({}));
@@ -45,22 +45,20 @@ const App = () => {
       default:
         dispatch(fetchRestSettings({}));
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     cacheChecker();
-    return () => {};
   }, []);
 
   useEffect(() => {
     fetchTranslations();
-    return () => {};
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     fetchUserSettings(user?.role || '');
-    return () => {};
-  }, [user?.role]);
+  }, [user?.role, fetchUserSettings]);
 
   const fetchTranslations = () => {
     const params = { lang: i18n.language };
@@ -77,59 +75,60 @@ const App = () => {
     <Providers>
       <Router>
         <WeekRangeProvider>
-        <Routes>
-          <Route
-            index
-            path='/login'
-            element={
-              <PathLogout>
-                <Login />
-              </PathLogout>
-            }
-          />
-          <Route
-            path='/welcome'
-            element={
-              <WelcomeLayout>
-                <Welcome />
-              </WelcomeLayout>
-            }
-          />
-          <Route
-            path='/installation'
-            element={
-              <WelcomeLayout>
-                <GlobalSettings />
-              </WelcomeLayout>
-            }
-          />
+          <Routes>
+            <Route
+              path='/login'
+              element={
+                <PathLogout>
+                  <Login />
+                </PathLogout>
+              }
+            />
+            <Route
+              path='/welcome'
+              element={
+                <WelcomeLayout>
+                  <Welcome />
+                </WelcomeLayout>
+              }
+            />
+            <Route
+              path='/installation'
+              element={
+                <WelcomeLayout>
+                  <GlobalSettings />
+                </WelcomeLayout>
+              }
+            />
 
-          {/* Redirect '/' to dashboard explicitly */}
-          <Route path='/' element={<Navigate to='/dashboard' />} />
+            {/* Protected app layout with nested routes */}
+            <Route
+              path='/'
+              element={
+                <ProtectedRoute>
+                  <AppLayout />
+                </ProtectedRoute>
+              }
+            >
+              {/* Redirect root to dashboard */}
+              <Route index element={<Navigate to='/dashboard' replace />} />
+              
+              {/* All app routes */}
+              {AllRoutes.map(({ path, component: Component }) => (
+                <Route key={path} path={path} element={<Component />} />
+              ))}
+            </Route>
 
-          {/* Protected app layout */}
-          <Route
-            path='/*'
-            element={
-              <ProtectedRoute>
-                <AppLayout />
-              </ProtectedRoute>
-            }
-          >
-            {AllRoutes.map(({ path, component: Component }) => (
-              <Route key={path} path={path} element={<Component />} />
-            ))}
-          </Route>
-
-          <Route
-            path='*'
-            element={
-              <Suspense fallback={<Loading />}>
-                <NotFound />
-              </Suspense>
-            }
-          />
-        </Routes>
+            {/* 404 Not Found - must be last */}
+            <Route
+              path='*'
+              element={
+                <Suspense fallback={<Loading />}>
+                  <NotFound />
+                </Suspense>
+              }
+            />
+          </Routes>
         </WeekRangeProvider>
         <ToastContainer
           className='antd-toast'

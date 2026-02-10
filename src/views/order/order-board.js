@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { Button, Space, Card, DatePicker, Modal } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ClearOutlined, PlusCircleOutlined } from '@ant-design/icons';
@@ -256,7 +256,7 @@ export default function OrderBoard() {
     }
   };
 
-  const fetchOrderAllItem = () => {
+  const fetchOrderAllItem = useCallback(() => {
     dispatch(clearItems());
     fetchOrdersCase({ status: 'new' });
     fetchOrdersCase({ status: 'accepted' });
@@ -265,7 +265,8 @@ export default function OrderBoard() {
     fetchOrdersCase({ status: 'delivered' });
     fetchOrdersCase({ status: 'canceled' });
     fetchOrdersCase({ status: 'cooking' });
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, data, dateRange]);
 
   const handleClear = () => {
     batch(() => {
@@ -289,6 +290,21 @@ export default function OrderBoard() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeMenu?.refetch]);
+
+  // Expose fetchOrderAllItem to parent component for push notifications
+  useEffect(() => {
+    // Store the refresh function in a way that can be accessed by PushNotification
+    if (window) {
+      window.refreshOrderBoard = fetchOrderAllItem;
+    }
+    
+    return () => {
+      // Cleanup
+      if (window) {
+        delete window.refreshOrderBoard;
+      }
+    };
+  }, [fetchOrderAllItem]);
 
   return (
     <>

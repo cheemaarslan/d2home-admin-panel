@@ -50,6 +50,14 @@ export default function NotificationBar() {
       });
   }
 
+  // Handle order refresh when new notification arrives
+  const handleNewOrder = () => {
+    // Check if OrderBoard's refresh function is available
+    if (window.refreshOrderBoard && typeof window.refreshOrderBoard === 'function') {
+      window.refreshOrderBoard();
+    }
+  };
+
   return (
     <>
       <span className='icon-button' onClick={() => setNotificationDrawer(true)}>
@@ -65,7 +73,10 @@ export default function NotificationBar() {
         clear={clearNotifications}
         refetch={getNotifications}
       />
-      <PushNotification refetch={getNotifications} />
+      <PushNotification 
+        refetch={getNotifications} 
+        onNewOrder={handleNewOrder}
+      />
     </>
   );
 }

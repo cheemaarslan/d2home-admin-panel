@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addMenu } from '../redux/slices/menu';
 import { useNavigate } from 'react-router-dom';
 
-export default function PushNotification({ refetch }) {
+export default function PushNotification({ refetch, onNewOrder }) {
   const { t } = useTranslation();
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -123,7 +123,13 @@ export default function PushNotification({ refetch }) {
     if (data?.body) {
       const isParcel = data.body?.includes('parcel');
       isParcel ? notifyParcel() : notifyOrder();
+      
+      // Trigger order board refresh when new notification arrives
+      if (onNewOrder && typeof onNewOrder === 'function') {
+        onNewOrder();
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   useEffect(() => {
@@ -132,10 +138,10 @@ export default function PushNotification({ refetch }) {
 
   onMessageListener()
     .then((payload) => {
-      console.log('payload', payload);
+   
       const title = payload?.notification?.title ?? payload?.notification?.body;
       const body = payload?.notification?.body;
-      console.log(title);
+      
       setData({
         title,
         body,

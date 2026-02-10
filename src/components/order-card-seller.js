@@ -14,7 +14,6 @@ import {
   RadarChartOutlined,
   ClockCircleOutlined,
   ShopOutlined,
-  WarningOutlined
 } from '@ant-design/icons';
 import { Avatar, Card, List, Skeleton, Space, Tag } from 'antd';
 import { IMG_URL } from '../configs/app-global';
@@ -123,12 +122,7 @@ const OrderCardSeller = ({
       const currentTime = moment();
       const minutesPassed = currentTime.diff(orderTime, 'minutes');
       
-      console.log('=== SHOP CHECK ===');
-      console.log('Order ID:', item.id);
-      console.log('Created Time:', createdTime);
-      console.log('Minutes Passed:', minutesPassed);
-      console.log('Timeout Minutes:', shopTimeoutMinutes);
-      console.log('Should Show Shop Alert:', minutesPassed >= shopTimeoutMinutes);
+    
       
       if (minutesPassed >= shopTimeoutMinutes) {
         setShowShopAlert(true);
